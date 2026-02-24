@@ -1,0 +1,401 @@
+\documentclass[11pt,a4paper]{article}
+
+% Packages
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{subcaption}
+
+% Code listing style
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    language=Python,
+    commentstyle=\color{gray},
+    keywordstyle=\color{blue},
+    stringstyle=\color{red}
+}
+
+% Title information
+\title{\textbf{Milestone 1: S4-Based Galaxy Morphology Classification}\\
+       \Large CS/ECE XXX - Deep Learning Project}
+\author{Your Name\\
+        ERP ID: XXXXXXXX}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This report documents the implementation and evaluation of a Structured State Space (S4) model for galaxy morphology classification using the GalaxyMNIST dataset. We implement three variants of S4 (Recurrent, Convolutional, and Diagonal), validate their numerical equivalence, and apply the Hilbert curve space-filling transformation to preserve spatial locality in image sequences. Our best model achieves XX.X\% test accuracy on the four-class galaxy classification task, demonstrating the effectiveness of state space models for processing astronomical imagery as sequential data.
+\end{abstract}
+
+\section{Introduction}
+
+\subsection{Background}
+Galaxy morphology classification is a fundamental task in observational astronomy. Traditional approaches rely on convolutional neural networks (CNNs), but recent advances in sequence modeling suggest alternative architectures may be effective. Structured State Space models (S4) have shown strong performance on long-range sequence modeling tasks while maintaining linear complexity.
+
+\subsection{Problem Statement}
+The goal of this project is to:
+\begin{itemize}
+    \item Implement S4 models from scratch in PyTorch
+    \item Apply Hilbert curve scanning to preserve spatial locality
+    \item Achieve $\geq 65\%$ test accuracy on GalaxyMNIST
+    \item Validate numerical equivalence between S4 formulations
+    \item Document the mathematical foundations and implementation details
+\end{itemize}
+
+\subsection{Dataset: GalaxyMNIST}
+GalaxyMNIST consists of 10,000 galaxy images (64$\times$64 RGB), each labeled as one of four morphological types:
+\begin{enumerate}
+    \item \textbf{Smooth Round}: Elliptical galaxies with spheroidal light distributions
+    \item \textbf{Smooth Cigar}: Elongated elliptical galaxies
+    \item \textbf{Edge-on Disk}: Spiral galaxies viewed edge-on
+    \item \textbf{Unbarred Spiral}: Face-on spiral galaxies
+\end{enumerate}
+
+The dataset is split into 80\% training/validation and 20\% test sets.
+
+\section{Methodology}
+
+\subsection{Structured State Space Models}
+
+\subsubsection{Continuous-Time Formulation}
+The S4 model is based on linear state space systems:
+\begin{align}
+    \frac{dx(t)}{dt} &= Ax(t) + Bu(t) \label{eq:continuous_state}\\
+    y(t) &= Cx(t) + Du(t) \label{eq:continuous_output}
+\end{align}
+where $A \in \mathbb{R}^{N \times N}$ is the state transition matrix, $B \in \mathbb{R}^{N \times 1}$ projects inputs to states, $C \in \mathbb{R}^{1 \times N}$ projects states to outputs, and $D \in \mathbb{R}$ is a skip connection.
+
+\subsubsection{Discretization}
+We discretize equations \eqref{eq:continuous_state}--\eqref{eq:continuous_output} using the bilinear (Tustin) method with step size $\Delta$:
+\begin{align}
+    \bar{A} &= \exp(\Delta A) \label{eq:A_bar}\\
+    \bar{B} &= (\Delta A)^{-1}(\exp(\Delta A) - I) \cdot (\Delta B) \label{eq:B_bar}
+\end{align}
+
+The discrete-time recurrence relation is:
+\begin{align}
+    x_k &= \bar{A}x_{k-1} + \bar{B}u_k \label{eq:recurrence_state}\\
+    y_k &= Cx_k + Du_k \label{eq:recurrence_output}
+\end{align}
+
+\subsubsection{Convolutional Formulation}
+Unrolling the recurrence gives an explicit convolution:
+\begin{equation}
+    y_k = \sum_{i=1}^{k} C\bar{A}^{k-i}\bar{B}u_i + Du_k = (K * u)_k + Du_k
+\end{equation}
+where the kernel is:
+\begin{equation}
+    K = [C\bar{B}, C\bar{A}\bar{B}, C\bar{A}^2\bar{B}, \ldots, C\bar{A}^{L-1}\bar{B}]
+\end{equation}
+
+This enables parallel processing via FFT-based convolution in $O(L \log L \cdot N)$ time.
+
+\subsubsection{Diagonal Parameterization (S4D)}
+To reduce parameters from $O(N^2)$ to $O(N)$, S4D uses a diagonal state matrix:
+\begin{equation}
+    A = \text{diag}(\lambda_1, \lambda_2, \ldots, \lambda_{N/2})
+\end{equation}
+where $\lambda_i = -\exp(\log A_{\text{real},i}) + j \cdot A_{\text{imag},i}$ are complex eigenvalues.
+
+\subsection{Hilbert Curve Scanning}
+Traditional row-major flattening disrupts spatial locality—adjacent pixels become distant in the sequence. The Hilbert curve is a space-filling curve that maps 2D coordinates to 1D while preserving locality.
+
+\subsubsection{Algorithm}
+We implement the iterative Hilbert curve mapping $d2xy(n, d)$ which converts a 1D distance $d$ to 2D coordinates $(x, y)$ on an $n \times n$ grid. The algorithm uses recursive quadrant traversal with rotation and reflection transformations:
+
+\begin{algorithm}[H]
+\caption{Hilbert Curve d2xy Conversion}
+\begin{algorithmic}[1]
+\State \textbf{Input:} Grid size $n$ (power of 2), distance $d$
+\State \textbf{Output:} Coordinates $(x, y)$
+\State $x \gets 0, y \gets 0$
+\State $s \gets 1$
+\While{$s < n$}
+    \State $rx \gets 1 \& (d/2)$
+    \State $ry \gets 1 \& (d \oplus rx)$
+    \If{$ry = 0$}
+        \If{$rx = 1$}
+            \State $x \gets s - 1 - x$
+            \State $y \gets s - 1 - y$
+        \EndIf
+        \State Swap $x \leftrightarrow y$
+    \EndIf
+    \State $x \gets x + s \cdot rx$
+    \State $y \gets y + s \cdot ry$
+    \State $d \gets d / 4$
+    \State $s \gets s \times 2$
+\EndWhile
+\State \Return $(x, y)$
+\end{algorithmic}
+\end{algorithm}
+
+For a 64$\times$64 image, this creates a sequence of 4096 pixels where spatial neighbors remain close in the 1D order.
+
+\subsection{Model Architecture}
+
+Our galaxy classifier architecture:
+\begin{enumerate}
+    \item \textbf{Input}: $(B, C, 64, 64)$ where $C=1$ (grayscale) or $C=3$ (RGB)
+    \item \textbf{Hilbert Scan}: Reorder to $(B, 4096, C)$
+    \item \textbf{Linear Projection}: Map to $(B, 4096, 64)$ (model dimension)
+    \item \textbf{S4D Layer 1}: $(B, 4096, 64) \to (B, 4096, 64)$ with GELU activation
+    \item \textbf{S4D Layer 2}: $(B, 4096, 64) \to (B, 4096, 64)$ with GELU activation
+    \item \textbf{Take Last Timestep}: Extract $(B, 64)$
+    \item \textbf{Fully Connected}: Map to $(B, 4)$ (class logits)
+    \item \textbf{Softmax}: Output probability distribution
+\end{enumerate}
+
+\textbf{Hyperparameters:}
+\begin{itemize}
+    \item $d_{\text{model}} = 64$ (model dimension)
+    \item $d_{\text{state}} = 64$ (state space dimension)
+    \item Batch size: 64
+    \item Learning rate: 0.0015
+    \item Optimizer: Adam
+    \item Loss function: Cross-entropy
+\end{itemize}
+
+\section{Implementation}
+
+\subsection{Key Components}
+
+\subsubsection{TakeLastTimestep Layer}
+The \texttt{TakeLastTimestep} module extracts the final hidden state from the sequence:
+\begin{lstlisting}[language=Python]
+class TakeLastTimestep(nn.Module):
+    def forward(self, x):
+        # x: (B, L, D) -> (B, D)
+        return x[:, -1, :]
+\end{lstlisting}
+
+This summarizes the entire sequence into a fixed-size representation for classification.
+
+\subsubsection{S4 Recurrent Implementation}
+File: \texttt{model/s4\_recurrent.py}
+
+Implements the recurrent formulation using explicit state updates. Complexity: $O(L \cdot N^2)$ per forward pass.
+
+\subsubsection{S4 Convolutional Implementation}  
+File: \texttt{model/s4\_conv.py}
+
+Precomputes the kernel and uses \texttt{torch.nn.functional.conv1d}. Complexity: $O(L^2 \cdot N)$ (direct) or $O(L \log L \cdot N)$ (FFT).
+
+\subsubsection{S4D Implementation}
+File: \texttt{model/s4d.py}
+
+Uses diagonal parameterization for efficiency. \textbf{Modified for RISC-V deployment}: Replaced FFT-based convolution with direct \texttt{conv1d} for simpler hardware implementation.
+
+\subsection{Numerical Validation}
+We validate equivalence between Recurrent and Convolutional formulations:
+\begin{itemize}
+    \item Test sequence length: 100
+    \item Maximum difference: [FILL IN AFTER RUNNING]
+    \item Tolerance: $10^{-4}$
+    \item Result: [PASS/FAIL]
+\end{itemize}
+
+\section{Experiments and Results}
+
+\subsection{Training Procedure}
+\begin{itemize}
+    \item Epochs: [FILL IN NUMBER TRAINED]
+    \item Training samples: 8,000
+    \item Validation samples: 2,000  
+    \item Test samples: 2,000
+    \item RNG Seed: [YOUR ERP ID]
+\end{itemize}
+
+\subsection{Training Curves}
+
+\begin{figure}[H]
+\centering
+% TODO: Insert training loss and validation accuracy plots
+% \includegraphics[width=0.8\textwidth]{figures/training_curves.png}
+\caption{Training loss (left) and validation accuracy (right) over epochs. [INSERT FIGURE]}
+\label{fig:training_curves}
+\end{figure}
+
+\textbf{Observations:}
+\begin{itemize}
+    \item Final training loss: [FILL IN]
+    \item Final validation accuracy: [FILL IN]
+    \item Evidence of overfitting/underfitting: [DESCRIBE]
+\end{itemize}
+
+\subsection{Test Set Performance}
+
+\textbf{Overall Test Accuracy:} [FILL IN] \%
+
+\begin{table}[H]
+\centering
+\caption{Per-Class Accuracy on Test Set}
+\begin{tabular}{lc}
+\toprule
+\textbf{Galaxy Type} & \textbf{Accuracy (\%)} \\
+\midrule
+Smooth Round & [FILL IN] \\
+Smooth Cigar & [FILL IN] \\
+Edge-on Disk & [FILL IN] \\
+Unbarred Spiral & [FILL IN] \\
+\midrule
+\textbf{Average} & \textbf{[FILL IN]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Confusion Matrix}
+
+\begin{figure}[H]
+\centering
+% TODO: Insert confusion matrix heatmap
+% \includegraphics[width=0.7\textwidth]{figures/confusion_matrix.png}
+\caption{Normalized confusion matrix showing classification performance. Rows represent true classes, columns represent predictions. [INSERT FIGURE]}
+\label{fig:confusion_matrix}
+\end{figure}
+
+\textbf{Analysis:}
+\begin{itemize}
+    \item Most confused classes: [DESCRIBE WHICH CLASSES ARE CONFUSED]
+    \item Possible reasons: [EXPLAIN WHY - e.g., visual similarity]
+    \item Strongest performance: [WHICH CLASS HAS HIGHEST ACCURACY]
+\end{itemize}
+
+\subsection{Model Complexity}
+
+\begin{table}[H]
+\centering
+\caption{Model Parameters and Computational Complexity}
+\begin{tabular}{lc}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Total Parameters & [FILL IN FROM torchinfo summary] \\
+Trainable Parameters & [FILL IN] \\
+Forward Pass FLOPs & [FILL IN or estimate] \\
+Inference Time (CPU) & [FILL IN ms per image] \\
+Model Size (MB) & [FILL IN] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discussion}
+
+\subsection{Key Findings}
+\begin{enumerate}
+    \item \textbf{S4 for Image Classification}: [DISCUSS whether treating images as sequences via Hilbert curve is effective]
+    \item \textbf{Hilbert Curve Impact}: [COMPARE to row-major ordering if you experimented with it]
+    \item \textbf{Long-Range Dependencies}: [DISCUSS what patterns the S4 model might be capturing]
+    \item \textbf{Performance vs. CNNs}: [OPTIONAL: If you know typical CNN performance on GalaxyMNIST, compare]
+\end{enumerate}
+
+\subsection{Challenges Encountered}
+\begin{itemize}
+    \item [DESCRIBE IMPLEMENTATION CHALLENGES]
+    \item [NUMERICAL STABILITY ISSUES?]
+    \item [TRAINING DIFFICULTIES?]
+\end{itemize}
+
+\subsection{Limitations}
+\begin{enumerate}
+    \item \textbf{Computational Cost}: S4 with full state matrix has $O(N^2)$ parameters. S4D addresses this with diagonal parameterization.
+    \item \textbf{Image-Specific Architecture}: Unlike CNNs, S4 doesn't have built-in translation invariance or local connectivity bias.
+    \item \textbf{Interpretability}: Harder to visualize what S4 "sees" compared to CNN activation maps.
+\end{enumerate}
+
+\subsection{Potential Improvements}
+\begin{itemize}
+    \item Data augmentation (rotation, flipping, brightness)
+    \item Ensemble multiple models
+    \item Try different state space initializations (HiPPO variants)
+    \item Hybrid CNN+S4 architecture
+    \item Longer training with learning rate scheduling
+\end{itemize}
+
+\section{Conclusion}
+
+This project successfully implemented Structured State Space models from scratch and applied them to galaxy morphology classification. We achieved [FILL IN ACCURACY]\% test accuracy, [ABOVE/BELOW/MEETING] the 65\% target. The key contributions include:
+
+\begin{enumerate}
+    \item Full implementation of S4 Recurrent, Convolutional, and Diagonal variants
+    \item Validation of numerical equivalence between formulations
+    \item Hilbert curve preprocessing for spatial locality preservation
+    \item Modification of S4D for simplified hardware deployment
+\end{enumerate}
+
+The results demonstrate that [SUMMARIZE MAIN CONCLUSION - e.g., "sequence models can effectively classify images when proper spatial encoding is used" or "S4 provides a viable alternative to CNNs for certain vision tasks"].
+
+\section{References}
+
+\begin{enumerate}
+    \item Gu, A., Goel, K., \& Ré, C. (2022). Efficiently Modeling Long Sequences with Structured State Spaces. \textit{International Conference on Learning Representations (ICLR)}.
+    
+    \item Gu, A., Gupta, A., Goel, K., \& Ré, C. (2022). On the Parameterization and Initialization of Diagonal State Space Models. \textit{Advances in Neural Information Processing Systems (NeurIPS)}.
+    
+    \item Walmsley, M., et al. (2022). Galaxy Zoo DECaLS: Detailed visual morphology measurements from volunteers and deep learning for 314,000 galaxies. \textit{Monthly Notices of the Royal Astronomical Society}, 509(3), 3966-3988.
+    
+    \item Hilbert, D. (1891). Über die stetige Abbildung einer Linie auf ein Flächenstück. \textit{Mathematische Annalen}, 38(3), 459-460.
+    
+    \item [ADD ANY OTHER REFERENCES YOU CONSULTED]
+\end{enumerate}
+
+\appendix
+
+\section{Code Listings}
+
+\subsection{Hilbert Curve Implementation}
+Key function from \texttt{model/hilbert.py}:
+\begin{lstlisting}[language=Python]
+def _d2xy(self, n: int, d: int) -> tuple:
+    """Convert Hilbert curve distance to 2D coordinates."""
+    x = y = 0
+    s = 1
+    while s < n:
+        rx = 1 & (d // 2)
+        ry = 1 & (d ^ rx)
+        if ry == 0:
+            if rx == 1:
+                x = s - 1 - x
+                y = s - 1 - y
+            x, y = y, x
+        x += s * rx
+        y += s * ry
+        d //= 4
+        s *= 2
+    return (x, y)
+\end{lstlisting}
+
+\subsection{Model Architecture Summary}
+\begin{lstlisting}[language=text]
+[PASTE OUTPUT FROM torchinfo summary HERE]
+\end{lstlisting}
+
+\section{Experimental Logs}
+
+\begin{table}[H]
+\centering
+\caption{Training Log (Sample Epochs)}
+\begin{tabular}{cccc}
+\toprule
+\textbf{Epoch} & \textbf{Train Loss} & \textbf{Val Acc} & \textbf{Time (s)} \\
+\midrule
+1 & [FILL] & [FILL] & [FILL] \\
+5 & [FILL] & [FILL] & [FILL] \\
+10 & [FILL] & [FILL] & [FILL] \\
+\vdots & \vdots & \vdots & \vdots \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}
