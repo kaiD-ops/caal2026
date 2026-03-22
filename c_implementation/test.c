@@ -32,7 +32,7 @@ static float compute_mae(const float *a, const float *b, int n)
 static float compute_max(const float *a, const float *b, int n)
 {
     float mx = 0.0f;
-    for (int i = 0; i < n; i++) { float d = a[i]-b[i]; if(d<0)d=-d; if(d>mx)mx=d; }
+    for (int i = 0; i < n; i++) { float d=a[i]-b[i]; if(d<0)d=-d; if(d>mx)mx=d; }
     return mx;
 }
 
@@ -102,57 +102,57 @@ int main(int argc, char *argv[])
 
     hilbert_scan(&params, img, c_hilbert);
     snprintf(path, sizeof(path), "%s_hilbert.bin", prefix);
-    { float *r = load_bin(path, SEQ_LEN*C_IN);
-      if(r){ all_pass &= check("hilbert_scan", c_hilbert, r, SEQ_LEN*C_IN, TOL_EXACT_MSE, TOL_EXACT_MAE); free(r); } }
+    { float *ref = load_bin(path, SEQ_LEN*C_IN);
+      if (ref) { all_pass &= check("hilbert_scan", c_hilbert, ref, SEQ_LEN*C_IN, TOL_EXACT_MSE, TOL_EXACT_MAE); free(ref); } }
 
     linear_layer((const float*)params.uproject_weight, params.uproject_bias,
                  c_hilbert, c_linear, C_IN, D_MODEL, SEQ_LEN);
     snprintf(path, sizeof(path), "%s_linear.bin", prefix);
-    { float *r = load_bin(path, SEQ_LEN*D_MODEL);
-      if(r){ all_pass &= check("uproject", c_linear, r, SEQ_LEN*D_MODEL, TOL_LINEAR_MSE, TOL_LINEAR_MAE); free(r); } }
+    { float *ref = load_bin(path, SEQ_LEN*D_MODEL);
+      if (ref) { all_pass &= check("uproject", c_linear, ref, SEQ_LEN*D_MODEL, TOL_LINEAR_MSE, TOL_LINEAR_MAE); free(ref); } }
 
     s4d_layer(params.s4_1_log_dt, (const float*)params.s4_1_log_A_real,
               (const float*)params.s4_1_A_imag, (const float*)params.s4_1_C,
               params.s4_1_D, c_linear, c_s4d1);
     snprintf(path, sizeof(path), "%s_s4d1.bin", prefix);
-    { float *r = load_bin(path, SEQ_LEN*D_MODEL);
-      if(r){ all_pass &= check("s4d_layer_1", c_s4d1, r, SEQ_LEN*D_MODEL, TOL_S4D_MSE, TOL_S4D_MAE); free(r); } }
+    { float *ref = load_bin(path, SEQ_LEN*D_MODEL);
+      if (ref) { all_pass &= check("s4d_layer_1", c_s4d1, ref, SEQ_LEN*D_MODEL, TOL_S4D_MSE, TOL_S4D_MAE); free(ref); } }
 
     memcpy(c_gelu1, c_s4d1, SEQ_LEN*D_MODEL*sizeof(float));
     gelu_inplace(c_gelu1, SEQ_LEN*D_MODEL);
     snprintf(path, sizeof(path), "%s_gelu1.bin", prefix);
-    { float *r = load_bin(path, SEQ_LEN*D_MODEL);
-      if(r){ all_pass &= check("gelu_1", c_gelu1, r, SEQ_LEN*D_MODEL, TOL_GELU_MSE, TOL_GELU_MAE); free(r); } }
+    { float *ref = load_bin(path, SEQ_LEN*D_MODEL);
+      if (ref) { all_pass &= check("gelu_1", c_gelu1, ref, SEQ_LEN*D_MODEL, TOL_GELU_MSE, TOL_GELU_MAE); free(ref); } }
 
     s4d_layer(params.s4_2_log_dt, (const float*)params.s4_2_log_A_real,
               (const float*)params.s4_2_A_imag, (const float*)params.s4_2_C,
               params.s4_2_D, c_gelu1, c_s4d2);
     snprintf(path, sizeof(path), "%s_s4d2.bin", prefix);
-    { float *r = load_bin(path, SEQ_LEN*D_MODEL);
-      if(r){ all_pass &= check("s4d_layer_2", c_s4d2, r, SEQ_LEN*D_MODEL, TOL_S4D_MSE, TOL_S4D_MAE); free(r); } }
+    { float *ref = load_bin(path, SEQ_LEN*D_MODEL);
+      if (ref) { all_pass &= check("s4d_layer_2", c_s4d2, ref, SEQ_LEN*D_MODEL, TOL_S4D_MSE, TOL_S4D_MAE); free(ref); } }
 
     memcpy(c_gelu2, c_s4d2, SEQ_LEN*D_MODEL*sizeof(float));
     gelu_inplace(c_gelu2, SEQ_LEN*D_MODEL);
     snprintf(path, sizeof(path), "%s_gelu2.bin", prefix);
-    { float *r = load_bin(path, SEQ_LEN*D_MODEL);
-      if(r){ all_pass &= check("gelu_2", c_gelu2, r, SEQ_LEN*D_MODEL, TOL_GELU_MSE, TOL_GELU_MAE); free(r); } }
+    { float *ref = load_bin(path, SEQ_LEN*D_MODEL);
+      if (ref) { all_pass &= check("gelu_2", c_gelu2, ref, SEQ_LEN*D_MODEL, TOL_GELU_MSE, TOL_GELU_MAE); free(ref); } }
 
     take_last_timestep(c_gelu2, c_pooled);
     snprintf(path, sizeof(path), "%s_pooled.bin", prefix);
-    { float *r = load_bin(path, D_MODEL);
-      if(r){ all_pass &= check("take_last", c_pooled, r, D_MODEL, TOL_EXACT_MSE, TOL_EXACT_MAE); free(r); } }
+    { float *ref = load_bin(path, D_MODEL);
+      if (ref) { all_pass &= check("take_last", c_pooled, ref, D_MODEL, TOL_EXACT_MSE, TOL_EXACT_MAE); free(ref); } }
 
     linear_layer((const float*)params.fc_weight, params.fc_bias,
                  c_pooled, c_logits, D_MODEL, N_CLASSES, 1);
     snprintf(path, sizeof(path), "%s_logits.bin", prefix);
-    { float *r = load_bin(path, N_CLASSES);
-      if(r){ all_pass &= check("fc_head", c_logits, r, N_CLASSES, TOL_LINEAR_MSE, TOL_LINEAR_MAE); free(r); } }
+    { float *ref = load_bin(path, N_CLASSES);
+      if (ref) { all_pass &= check("fc_head", c_logits, ref, N_CLASSES, TOL_LINEAR_MSE, TOL_LINEAR_MAE); free(ref); } }
 
     memcpy(c_probs, c_logits, N_CLASSES*sizeof(float));
     softmax_inplace(c_probs, N_CLASSES);
     snprintf(path, sizeof(path), "%s_probs.bin", prefix);
-    { float *r = load_bin(path, N_CLASSES);
-      if(r){ all_pass &= check("softmax", c_probs, r, N_CLASSES, TOL_SOFTMAX_MSE, TOL_SOFTMAX_MAE); free(r); } }
+    { float *ref = load_bin(path, N_CLASSES);
+      if (ref) { all_pass &= check("softmax", c_probs, ref, N_CLASSES, TOL_SOFTMAX_MSE, TOL_SOFTMAX_MAE); free(ref); } }
 
     int pred = argmax(c_probs, N_CLASSES);
     printf("\nPredicted: %d  |  True: %d  |  %s\n",
