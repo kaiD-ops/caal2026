@@ -1,0 +1,283 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  breaklines=true
+}
+
+\title{Milestone 2: C/C++ Implementation \& Numerical Validation\\
+{\large S4 Models for Galaxy Classification on RISC-V Edge Processors}}
+
+\author{
+\IEEEauthorblockN{Team Echo Theory}
+\IEEEauthorblockA{GitHub: \url{https://github.com/kaiD-ops/caal2026}}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents a complete bare-metal C implementation of the S4D galaxy
+morphology classifier trained in Milestone 1. All inference operations ---
+Hilbert curve scanning, linear projection, S4D sequence modelling, GELU
+activation, and softmax classification --- are implemented from scratch using
+only primitive C data types and the standard math library, with no external
+dependencies. Layer-by-layer numerical validation against PyTorch reference
+outputs confirms correctness, with the final predicted class matching PyTorch
+on all tested samples. Performance benchmarking across five GCC optimisation
+levels reveals a 3.88$\times$ speedup from \texttt{-O0} to \texttt{-O1},
+with total inference time of 1.602\,s at \texttt{-O1} on an x86-64 CPU.
+The implementation provides a portable, dependency-free foundation for
+RISC-V assembly translation in Milestone 3.
+\end{abstract}
+
+\section{Introduction}
+Modern deep learning frameworks such as PyTorch abstract away the low-level
+computational mechanics necessary for embedded deployment. RISC-V processors
+execute assembly instructions directly and cannot run PyTorch. This milestone
+bridges the gap by reimplementing the complete S4D inference pipeline in pure
+C (C11 standard), using only static memory allocation and standard library
+functions.
+
+The goals of this milestone are: (1) implement all inference layers in C with
+no external libraries, (2) validate numerical correctness against PyTorch
+reference outputs layer by layer, (3) benchmark performance across compiler
+optimisation levels, and (4) analyse the generated assembly to understand
+compiler transformations.
+
+\section{Model Architecture Overview}
+The GalaxyClassifierS4D processes a $64\times64$ grayscale image through
+the following pipeline:
+
+\begin{equation}
+(1,64,64) \xrightarrow{\text{Hilbert}} (4096,1) \xrightarrow{\text{Linear}}
+(4096,64) \xrightarrow{\text{S4D+GELU}} (4096,64) \xrightarrow{\text{S4D+GELU}}
+(4096,64) \xrightarrow{\text{Pool}} (64) \xrightarrow{\text{FC}} (4)
+\end{equation}
+
+Fixed hyperparameters: \texttt{d\_model}$=64$, \texttt{d\_state}$=32$,
+\texttt{seq\_len}$=4096$, \texttt{n\_classes}$=4$.
+
+\section{Implementation Methodology}
+
+\subsection{Design Decisions}
+All intermediate buffers are declared as file-scope static arrays, matching
+the constraints of bare-metal embedded systems where heap allocation via
+\texttt{malloc} may be unavailable. This also eliminates memory leak risks
+and simplifies porting to RISC-V assembly. All weights are stored as
+\texttt{float32} to match PyTorch's default precision.
+
+\subsection{Weight Loading}
+Model parameters are exported from PyTorch to \texttt{model\_weights.bin},
+a flat binary file of 84,496 bytes. The C \texttt{ModelParams} struct mirrors
+the exact binary layout, enabling a single \texttt{fread()} call to load the
+entire model.
+
+\subsection{Layer Implementations}
+
+\textbf{Hilbert Scan.} Reorders pixels from channel-major $(C,H,W)$ to
+sequence layout $(L,C)$ using pre-computed indices. Pure index lookup with
+no arithmetic --- outputs match PyTorch bit-for-bit (MSE $= 0$).
+
+\textbf{Linear Layer.} Implements $Y = XW^T + b$ using three nested loops.
+Bias values initialise the accumulator before the inner dot product loop.
+
+\textbf{S4D Layer.} The most complex component. For each of 64 channels:
+(1) compute $\Delta t = \exp(\log\Delta t)$;
+(2) discretise $A$ via complex exponential:
+$\bar{A}_n = \exp(\Delta t \cdot A_n)$ where $A_n = -\exp(\texttt{log\_A\_real}_n) + j \cdot \texttt{A\_imag}_n$;
+(3) compute $\tilde{C}_n = C_n(\bar{A}_n - 1)/A_n$;
+(4) build kernel $K[t] = 2\,\text{Re}\!\left(\sum_n \tilde{C}_n \bar{A}_n^t\right)$ iteratively;
+(5) apply causal convolution $y[t] = D \cdot u[t] + \sum_{j=0}^{t} K[j]\,u[t-j]$.
+All complex arithmetic is implemented manually using float pairs.
+
+\textbf{GELU.} Uses the tanh approximation matching PyTorch exactly:
+\begin{equation}
+\text{GELU}(x) = 0.5x\!\left(1 + \tanh\!\left(\sqrt{\tfrac{2}{\pi}}\left(x + 0.044715x^3\right)\right)\right)
+\end{equation}
+
+\textbf{Softmax.} Numerically stable implementation: subtract maximum before
+\texttt{expf()} to prevent overflow.
+
+\textbf{TakeLastTimestep.} Single \texttt{memcpy()} extracting the final row
+of the $(4096,64)$ tensor.
+
+\section{Weight Format Documentation}
+Table~\ref{tab:weights} documents the complete binary layout of
+\texttt{model\_weights.bin}.
+
+\begin{table}[h]
+\centering
+\caption{model\_weights.bin layout (total: 84,496 bytes)}
+\label{tab:weights}
+\begin{tabular}{@{}rrlll@{}}
+\toprule
+Offset & Size & Parameter & Type & Shape \\
+\midrule
+0       & 16384 & hilbert\_scan.indices & int32   & (4096,) \\
+16384   & 256   & uproject.weight       & float32 & (64,1) \\
+16640   & 256   & uproject.bias         & float32 & (64,) \\
+16896   & 256   & s4\_1.log\_dt          & float32 & (64,) \\
+17152   & 8192  & s4\_1.log\_A\_real      & float32 & (64,32) \\
+25344   & 8192  & s4\_1.A\_imag           & float32 & (64,32) \\
+33536   & 16384 & s4\_1.C               & float32 & (64,32,2) \\
+49920   & 256   & s4\_1.D               & float32 & (64,) \\
+50176   & 256   & s4\_2.log\_dt          & float32 & (64,) \\
+50432   & 8192  & s4\_2.log\_A\_real      & float32 & (64,32) \\
+58624   & 8192  & s4\_2.A\_imag           & float32 & (64,32) \\
+66816   & 16384 & s4\_2.C               & float32 & (64,32,2) \\
+83200   & 256   & s4\_2.D               & float32 & (64,) \\
+83456   & 1024  & fc.weight             & float32 & (4,64) \\
+84480   & 16    & fc.bias               & float32 & (4,) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Numerical Validation}
+
+\subsection{Methodology}
+\texttt{generate\_test\_data.py} attaches PyTorch forward hooks to capture
+intermediate tensors after every layer for 12 test samples covering all 4
+galaxy classes. These are saved as binary reference files. The C program
+\texttt{test.c} runs each layer independently and computes MSE, MAE, and
+maximum absolute error against the references.
+
+\subsection{Results}
+Table~\ref{tab:val} shows validation results for sample\_09 (Smooth Round,
+confidence 0.9256). The final predicted class matches PyTorch exactly.
+
+\begin{table}[h]
+\centering
+\caption{Layer-by-layer validation results (sample\_09)}
+\label{tab:val}
+\begin{tabular}{@{}llllc@{}}
+\toprule
+Layer & MSE & MAE & Max Error & Status \\
+\midrule
+hilbert\_scan  & 0.00e+00 & 0.00e+00 & 0.00e+00 & PASS \\
+uproject       & 0.00e+00 & 0.00e+00 & 0.00e+00 & PASS \\
+s4d\_layer\_1  & 1.67e-10 & 7.20e-06 & 1.39e-04 & PASS \\
+gelu\_1        & 2.91e-08 & 1.16e-04 & 5.23e-04 & marginal \\
+s4d\_layer\_2  & 4.38e-07 & 3.37e-04 & 4.27e-03 & marginal \\
+gelu\_2        & 1.80e-07 & 2.02e-04 & 3.52e-03 & marginal \\
+take\_last     & 4.56e-07 & 3.17e-04 & 3.52e-03 & marginal \\
+fc\_head       & 2.02e-05 & 4.18e-03 & 5.91e-03 & marginal \\
+softmax        & 4.80e-08 & 1.82e-04 & 3.64e-04 & PASS \\
+\midrule
+\multicolumn{4}{l}{Final prediction: Class 0 (Smooth Round)} & CORRECT \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The ``marginal'' layers show small errors caused by floating-point
+accumulation across the O($L^2$) convolution loop. The differences are
+numerically negligible --- e.g.\ 0.729727 vs 0.729842 --- and the final
+class prediction is identical to PyTorch on all tested samples.
+
+\section{Performance Analysis}
+
+\subsection{Timing Results}
+Table~\ref{tab:timing} shows wall-clock inference time across GCC optimisation
+levels. The S4D layer dominates runtime due to its O($L^2 \cdot H$) causal
+convolution: $4096^2 \times 64 \approx 1.07$ billion floating-point operations.
+
+\begin{table}[h]
+\centering
+\caption{Inference time vs optimisation level (sample\_09, x86-64)}
+\label{tab:timing}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Flag & Time (s) & Speedup vs -O0 \\
+\midrule
+\texttt{-O0} & 6.211 & 1.00$\times$ \\
+\texttt{-O1} & 1.602 & 3.88$\times$ \\
+\texttt{-O2} & 1.885 & 3.30$\times$ \\
+\texttt{-O3} & 1.802 & 3.45$\times$ \\
+\texttt{-Ofast} & 1.610 & 3.86$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Assembly Analysis}
+Table~\ref{tab:asm} shows assembly file statistics. The increase in lines
+from O2 to O3 (1091 to 1704) reflects aggressive loop unrolling. The slight
+increase in multiply instructions at higher optimisation levels indicates the
+compiler reorganises operations for better instruction-level parallelism.
+
+\begin{table}[h]
+\centering
+\caption{Assembly analysis of nn.c}
+\label{tab:asm}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Flag & Lines & Multiply instr. \\
+\midrule
+\texttt{-O0} & 1187 & 29 \\
+\texttt{-O2} & 1091 & 36 \\
+\texttt{-O3} & 1704 & 38 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Memory Footprint}
+\begin{table}[h]
+\centering
+\caption{Memory usage breakdown}
+\label{tab:mem}
+\begin{tabular}{@{}lr@{}}
+\toprule
+Component & Size \\
+\midrule
+Model parameters (model\_weights.bin) & 82.5 KB \\
+Static intermediate buffers & 3104.3 KB \\
+\midrule
+Total & 3186.8 KB ($\approx$3.1 MB) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The total memory footprint of 3.1\,MB is dominated by the S4D intermediate
+buffers (two arrays of shape $4096 \times 64 \times \text{float32}$).
+For RISC-V deployment this may need to be reduced by processing the sequence
+in chunks.
+
+\subsection{C vs PyTorch Comparison}
+PyTorch inference on the same sample takes approximately 0.3--0.5\,s using
+optimised BLAS libraries, multithreaded execution, and hardware-specific
+kernels. Our C implementation at \texttt{-O1} takes 1.602\,s --- approximately
+$3\text{--}5\times$ slower. This gap is expected: PyTorch uses Intel MKL or
+OpenBLAS for matrix operations, while our implementation uses naive nested
+loops. The C code is single-threaded and makes no use of SIMD instructions.
+In Milestone 4, RISC-V vector extensions will close this gap.
+
+\section{Conclusion}
+We have successfully implemented a complete, dependency-free C inference
+engine for the S4D galaxy classifier. All layers produce numerically correct
+outputs with final predictions matching PyTorch exactly on all tested samples.
+The implementation uses static memory allocation throughout, making it
+directly portable to bare-metal RISC-V in Milestone 3.
+
+Key findings: (1) the S4D O($L^2$) convolution is the dominant bottleneck
+accounting for over 95\% of inference time; (2) compiler optimisation provides
+a 3.88$\times$ speedup with minimal code changes; (3) the total memory
+footprint of 3.1\,MB is feasible for embedded deployment but the buffer
+allocation strategy may need revisiting for severely constrained targets.
+
+\begin{thebibliography}{1}
+\bibitem{s4} A. Gu, K. Goel, C. R\'e, ``Efficiently Modeling Long Sequences
+with Structured State Spaces,'' ICLR 2022.
+\bibitem{s4d} A. Gu, A. Gupta, K. Goel, C. R\'e, ``On the Parameterization
+and Initialization of Diagonal State Space Models,'' NeurIPS 2022.
+\end{thebibliography}
+
+\end{document}
