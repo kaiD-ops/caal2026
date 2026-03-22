@@ -1,0 +1,34 @@
+=== Benchmark Results - Echo Theory M2 ===
+Platform: x86-64, Ubuntu 24.04, gcc 13.3.0
+Test sample: sample_09 (true=0 Smooth Round, pred=0 Smooth Round - CORRECT)
+
+--- Timing (real wall clock) ---
+-O0:    6.211s  (baseline)
+-O1:    1.602s  (3.88x speedup)
+-O2:    1.885s  (3.30x speedup)
+-O3:    1.802s  (3.45x speedup)
+-Ofast: 1.610s  (3.86x speedup)
+
+--- Assembly line counts ---
+nn_O0.s:  1187 lines
+nn_O2.s:  1091 lines
+nn_O3.s:  1704 lines
+
+--- Multiply instruction counts ---
+-O0: 29
+-O2: 36
+-O3: 38
+
+--- Memory footprint ---
+Parameters:  82.5 KB
+Buffers:     3104.3 KB
+Total:       3186.8 KB
+
+--- Validation sample_09 ---
+hilbert_scan:  MSE=0.00e+00  PASS
+uproject:      MSE=0.00e+00  PASS
+s4d_layer_1:   MSE=1.67e-10  PASS
+gelu_1:        MSE=2.91e-08  MAE=1.16e-04 (marginal - tiny float accumulation)
+s4d_layer_2:   MSE=4.38e-07  MAE=3.37e-04 (within expected range)
+softmax:       MSE=4.80e-08  final probs match to 3 decimal places
+Final prediction: CORRECT (Class 0 Smooth Round, conf=0.9256)
