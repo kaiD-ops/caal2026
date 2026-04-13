@@ -1,3 +1,49 @@
+
+
+
+# Python cache
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+ 
+# Jupyter checkpoints
+.ipynb_checkpoints/
+ 
+# Virtual environments
+venv/
+env/
+.env/
+ 
+# Dataset (too large - downloads at runtime)
+data/
+ 
+# Compiled C binaries (built from source via Makefile)
+c_implementation/galaxy_infer
+c_implementation/galaxy_infer_O0
+c_implementation/galaxy_infer_O1
+c_implementation/galaxy_infer_O2
+c_implementation/galaxy_infer_O3
+c_implementation/galaxy_infer_Ofast
+c_implementation/galaxy_test
+ 
+# PyTorch model checkpoint (not needed by C code)
+model_params/*.pth
+ 
+# Backup / scratch files
+*_backup.py
+ 
+# Generated CSV exports
+galaxy_samples.csv
+ 
+# OS junk
+.DS_Store
+Thumbs.db
+ 
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
