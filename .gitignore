@@ -26,8 +26,6 @@ c_implementation/galaxy_infer_O3
 c_implementation/galaxy_infer_Ofast
 c_implementation/galaxy_test
  
-# PyTorch model checkpoint (not needed by C code)
-model_params/*.pth
  
 # Backup / scratch files
 *_backup.py
