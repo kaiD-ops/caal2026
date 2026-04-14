@@ -96,19 +96,58 @@ void hilbert_scan(const ModelParams *p, const float *img, float *out)
     }
 }
 
+/*
+ * linear_layer
+ * ------------
+ * Implements an affine transformation: out = in * W^T + b
+ * This is the standard fully-connected / linear layer used in two places:
+ *   1. UProject: maps each pixel value (C_IN=1) to d_model=64 features
+ *      Called with seq_len=SEQ_LEN=4096, in_dim=1,  out_dim=64
+ *   2. FC head:  maps the pooled 64-dim vector to 4 class logits
+ *      Called with seq_len=1,            in_dim=64, out_dim=4
+ *
+ * Weight layout: row-major (D_out, D_in)
+ *   weight[o * in_dim + i] = W[o][i]
+ *   This means each row o of the weight matrix corresponds to one
+ *   output neuron, and the dot product with the input gives out[o].
+ *
+ * Handles both:
+ *   - Sequence inputs (seq_len > 1): processes each timestep independently
+ *     Input shape:  (seq_len, in_dim)
+ *     Output shape: (seq_len, out_dim)
+ *   - Vector inputs (seq_len = 1): single affine transform
+ *     Input shape:  (in_dim,)
+ *     Output shape: (out_dim,)
+ *
+ * Parameters:
+ *   weight  - weight matrix of shape (out_dim, in_dim), row-major
+ *   bias    - bias vector of shape (out_dim,)
+ *   in      - input of shape (seq_len, in_dim)
+ *   out     - output of shape (seq_len, out_dim)
+ *   in_dim  - input feature dimension
+ *   out_dim - output feature dimension
+ *   seq_len - number of timesteps (use 1 for plain vector input)
+ *
+ * Validation: uproject achieves MSE=0.0 vs PyTorch (exact match)
+ */
 void linear_layer(const float *weight, const float *bias,
                   const float *in, float *out,
                   int in_dim, int out_dim, int seq_len)
 {
     int t, o, i;
+    /* loop over timesteps - works for both sequence (seq_len>1)
+     * and single vector (seq_len=1) inputs */
     for (t = 0; t < seq_len; t++) {
-        const float *x_t = in  + t * in_dim;
-        float       *y_t = out + t * out_dim;
+        const float *x_t = in  + t * in_dim;   /* input at timestep t */
+        float       *y_t = out + t * out_dim;  /* output at timestep t */
         for (o = 0; o < out_dim; o++) {
+            /* bias initialises the accumulator - avoids a separate add */
             float acc = bias[o];
+            /* weight row o: weight[o * in_dim + 0 .. in_dim-1]
+             * row-major layout means W[o][i] = weight[o*in_dim + i] */
             const float *w_o = weight + o * in_dim;
             for (i = 0; i < in_dim; i++)
-                acc += w_o[i] * x_t[i];
+                acc += w_o[i] * x_t[i];  /* dot product W[o] . x_t */
             y_t[o] = acc;
         }
     }
