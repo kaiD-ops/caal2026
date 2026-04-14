@@ -442,42 +442,186 @@ s4d_layer:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
-	subq	$944, %rsp
-	movq	%rdi, -888(%rbp)
-	movq	%rsi, -896(%rbp)
-	movq	%rdx, -904(%rbp)
-	movq	%rcx, -912(%rbp)
-	movq	%r8, -920(%rbp)
-	movq	%r9, -928(%rbp)
+	subq	$704, %rsp
+	movq	%rdi, -648(%rbp)
+	movq	%rsi, -656(%rbp)
+	movq	%rdx, -664(%rbp)
+	movq	%rcx, -672(%rbp)
+	movq	%r8, -680(%rbp)
+	movq	%r9, -688(%rbp)
 	movq	16(%rbp), %rax
-	movq	%rax, -936(%rbp)
+	movq	%rax, -696(%rbp)
 	movq	%fs:40, %rax
 	movq	%rax, -8(%rbp)
 	xorl	%eax, %eax
-	movl	$0, -872(%rbp)
+	movl	$0, -636(%rbp)
 	jmp	.L48
-.L63:
-	movl	-872(%rbp), %eax
+.L59:
+	movl	-636(%rbp), %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
-	movq	-888(%rbp), %rax
+	movq	-648(%rbp), %rax
 	addq	%rdx, %rax
 	movl	(%rax), %eax
 	movd	%eax, %xmm0
 	call	expf@PLT
 	movd	%xmm0, %eax
-	movl	%eax, -848(%rbp)
-	movl	$0, -868(%rbp)
+	movl	%eax, -612(%rbp)
+	movl	$0, -632(%rbp)
 	jmp	.L49
 .L50:
-	movl	-872(%rbp), %eax
+	movl	-636(%rbp), %eax
 	sall	$5, %eax
 	movl	%eax, %edx
-	movl	-868(%rbp), %eax
+	movl	-632(%rbp), %eax
 	addl	%edx, %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
-	movq	-896(%rbp), %rax
+	movq	-656(%rbp), %rax
+	addq	%rdx, %rax
+	movl	(%rax), %eax
+	movd	%eax, %xmm0
+	call	expf@PLT
+	movd	%xmm0, %eax
+	movss	.LC3(%rip), %xmm0
+	movd	%eax, %xmm2
+	xorps	%xmm0, %xmm2
+	movaps	%xmm2, %xmm0
+	movss	%xmm0, -576(%rbp)
+	movl	-636(%rbp), %eax
+	sall	$5, %eax
+	movl	%eax, %edx
+	movl	-632(%rbp), %eax
+	addl	%edx, %eax
+	cltq
+	leaq	0(,%rax,4), %rdx
+	movq	-664(%rbp), %rax
+	addq	%rdx, %rax
+	movss	(%rax), %xmm0
+	movss	%xmm0, -572(%rbp)
+	movss	-576(%rbp), %xmm0
+	mulss	-612(%rbp), %xmm0
+	movss	%xmm0, -568(%rbp)
+	movss	-572(%rbp), %xmm0
+	mulss	-612(%rbp), %xmm0
+	movss	%xmm0, -564(%rbp)
+	movl	-568(%rbp), %eax
+	movd	%eax, %xmm0
+	call	expf@PLT
+	movd	%xmm0, %eax
+	movl	%eax, -560(%rbp)
+	movl	-564(%rbp), %eax
+	movd	%eax, %xmm0
+	call	cosf@PLT
+	movd	%xmm0, %eax
+	movd	%eax, %xmm0
+	mulss	-560(%rbp), %xmm0
+	movl	-632(%rbp), %eax
+	cltq
+	movss	%xmm0, -528(%rbp,%rax,4)
+	movl	-564(%rbp), %eax
+	movd	%eax, %xmm0
+	call	sinf@PLT
+	movd	%xmm0, %eax
+	movd	%eax, %xmm0
+	mulss	-560(%rbp), %xmm0
+	movl	-632(%rbp), %eax
+	cltq
+	movss	%xmm0, -400(%rbp,%rax,4)
+	movl	-632(%rbp), %eax
+	cltq
+	movss	-528(%rbp,%rax,4), %xmm0
+	movss	.LC4(%rip), %xmm1
+	subss	%xmm1, %xmm0
+	movss	%xmm0, -556(%rbp)
+	movl	-632(%rbp), %eax
+	cltq
+	movss	-400(%rbp,%rax,4), %xmm0
+	movss	%xmm0, -552(%rbp)
+	movl	-636(%rbp), %eax
+	sall	$5, %eax
+	movl	%eax, %edx
+	movl	-632(%rbp), %eax
+	addl	%edx, %eax
+	addl	%eax, %eax
+	cltq
+	leaq	0(,%rax,4), %rdx
+	movq	-672(%rbp), %rax
+	addq	%rdx, %rax
+	movss	(%rax), %xmm0
+	movss	%xmm0, -548(%rbp)
+	movl	-636(%rbp), %eax
+	sall	$5, %eax
+	movl	%eax, %edx
+	movl	-632(%rbp), %eax
+	addl	%edx, %eax
+	addl	%eax, %eax
+	cltq
+	addq	$1, %rax
+	leaq	0(,%rax,4), %rdx
+	movq	-672(%rbp), %rax
+	addq	%rdx, %rax
+	movss	(%rax), %xmm0
+	movss	%xmm0, -544(%rbp)
+	movss	-548(%rbp), %xmm0
+	mulss	-556(%rbp), %xmm0
+	movss	-544(%rbp), %xmm1
+	mulss	-552(%rbp), %xmm1
+	subss	%xmm1, %xmm0
+	movss	%xmm0, -540(%rbp)
+	movss	-548(%rbp), %xmm0
+	movaps	%xmm0, %xmm1
+	mulss	-552(%rbp), %xmm1
+	movss	-544(%rbp), %xmm0
+	mulss	-556(%rbp), %xmm0
+	addss	%xmm1, %xmm0
+	movss	%xmm0, -536(%rbp)
+	movss	-576(%rbp), %xmm0
+	movaps	%xmm0, %xmm1
+	mulss	%xmm0, %xmm1
+	movss	-572(%rbp), %xmm0
+	mulss	%xmm0, %xmm0
+	addss	%xmm1, %xmm0
+	movss	%xmm0, -532(%rbp)
+	movss	-540(%rbp), %xmm0
+	movaps	%xmm0, %xmm1
+	mulss	-576(%rbp), %xmm1
+	movss	-536(%rbp), %xmm0
+	mulss	-572(%rbp), %xmm0
+	addss	%xmm1, %xmm0
+	divss	-532(%rbp), %xmm0
+	movl	-632(%rbp), %eax
+	cltq
+	movss	%xmm0, -272(%rbp,%rax,4)
+	movss	-536(%rbp), %xmm0
+	mulss	-576(%rbp), %xmm0
+	movss	-540(%rbp), %xmm1
+	mulss	-572(%rbp), %xmm1
+	subss	%xmm1, %xmm0
+	divss	-532(%rbp), %xmm0
+	movl	-632(%rbp), %eax
+	cltq
+	movss	%xmm0, -144(%rbp,%rax,4)
+	addl	$1, -632(%rbp)
+.L49:
+	cmpl	$31, -632(%rbp)
+	jle	.L50
+	movl	$0, -628(%rbp)
+	jmp	.L51
+.L54:
+	pxor	%xmm0, %xmm0
+	movss	%xmm0, -620(%rbp)
+	movl	$0, -632(%rbp)
+	jmp	.L52
+.L53:
+	movl	-636(%rbp), %eax
+	sall	$5, %eax
+	movl	%eax, %edx
+	movl	-632(%rbp), %eax
+	addl	%edx, %eax
+	cltq
+	leaq	0(,%rax,4), %rdx
+	movq	-656(%rbp), %rax
 	addq	%rdx, %rax
 	movl	(%rax), %eax
 	movd	%eax, %xmm0
@@ -487,304 +631,152 @@ s4d_layer:
 	movd	%eax, %xmm3
 	xorps	%xmm0, %xmm3
 	movaps	%xmm3, %xmm0
-	movss	%xmm0, -832(%rbp)
-	movl	-872(%rbp), %eax
+	movss	%xmm0, -604(%rbp)
+	movl	-636(%rbp), %eax
 	sall	$5, %eax
 	movl	%eax, %edx
-	movl	-868(%rbp), %eax
+	movl	-632(%rbp), %eax
 	addl	%edx, %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
-	movq	-904(%rbp), %rax
+	movq	-664(%rbp), %rax
 	addq	%rdx, %rax
 	movss	(%rax), %xmm0
-	movss	%xmm0, -828(%rbp)
-	movss	-832(%rbp), %xmm0
-	mulss	-848(%rbp), %xmm0
-	movss	%xmm0, -824(%rbp)
-	movss	-828(%rbp), %xmm0
-	mulss	-848(%rbp), %xmm0
-	movss	%xmm0, -820(%rbp)
-	movl	-824(%rbp), %eax
+	movss	%xmm0, -600(%rbp)
+	movss	-604(%rbp), %xmm0
+	movaps	%xmm0, %xmm1
+	mulss	-612(%rbp), %xmm1
+	pxor	%xmm0, %xmm0
+	cvtsi2ssl	-628(%rbp), %xmm0
+	mulss	%xmm1, %xmm0
+	movss	%xmm0, -596(%rbp)
+	movss	-600(%rbp), %xmm0
+	movaps	%xmm0, %xmm1
+	mulss	-612(%rbp), %xmm1
+	pxor	%xmm0, %xmm0
+	cvtsi2ssl	-628(%rbp), %xmm0
+	mulss	%xmm1, %xmm0
+	movss	%xmm0, -592(%rbp)
+	movl	-596(%rbp), %eax
 	movd	%eax, %xmm0
 	call	expf@PLT
 	movd	%xmm0, %eax
-	movl	%eax, -816(%rbp)
-	movl	-820(%rbp), %eax
+	movl	%eax, -588(%rbp)
+	movl	-592(%rbp), %eax
 	movd	%eax, %xmm0
 	call	cosf@PLT
-	movd	%xmm0, %eax
-	movd	%eax, %xmm0
-	mulss	-816(%rbp), %xmm0
-	movl	-868(%rbp), %eax
-	cltq
-	movss	%xmm0, -784(%rbp,%rax,4)
-	movl	-820(%rbp), %eax
+	movss	-588(%rbp), %xmm1
+	mulss	%xmm1, %xmm0
+	movss	%xmm0, -584(%rbp)
+	movl	-592(%rbp), %eax
 	movd	%eax, %xmm0
 	call	sinf@PLT
-	movd	%xmm0, %eax
-	movd	%eax, %xmm0
-	mulss	-816(%rbp), %xmm0
-	movl	-868(%rbp), %eax
-	cltq
-	movss	%xmm0, -656(%rbp,%rax,4)
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-784(%rbp,%rax,4), %xmm0
-	movss	.LC4(%rip), %xmm1
-	subss	%xmm1, %xmm0
-	movss	%xmm0, -812(%rbp)
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-656(%rbp,%rax,4), %xmm0
-	movss	%xmm0, -808(%rbp)
-	movl	-872(%rbp), %eax
-	sall	$5, %eax
-	movl	%eax, %edx
-	movl	-868(%rbp), %eax
-	addl	%edx, %eax
-	addl	%eax, %eax
-	cltq
-	leaq	0(,%rax,4), %rdx
-	movq	-912(%rbp), %rax
-	addq	%rdx, %rax
-	movss	(%rax), %xmm0
-	movss	%xmm0, -804(%rbp)
-	movl	-872(%rbp), %eax
-	sall	$5, %eax
-	movl	%eax, %edx
-	movl	-868(%rbp), %eax
-	addl	%edx, %eax
-	addl	%eax, %eax
-	cltq
-	addq	$1, %rax
-	leaq	0(,%rax,4), %rdx
-	movq	-912(%rbp), %rax
-	addq	%rdx, %rax
-	movss	(%rax), %xmm0
-	movss	%xmm0, -800(%rbp)
-	movss	-804(%rbp), %xmm0
-	mulss	-812(%rbp), %xmm0
-	movss	-800(%rbp), %xmm1
-	mulss	-808(%rbp), %xmm1
-	subss	%xmm1, %xmm0
-	movss	%xmm0, -796(%rbp)
-	movss	-804(%rbp), %xmm0
-	movaps	%xmm0, %xmm1
-	mulss	-808(%rbp), %xmm1
-	movss	-800(%rbp), %xmm0
-	mulss	-812(%rbp), %xmm0
-	addss	%xmm1, %xmm0
-	movss	%xmm0, -792(%rbp)
-	movss	-832(%rbp), %xmm0
-	movaps	%xmm0, %xmm1
-	mulss	%xmm0, %xmm1
-	movss	-828(%rbp), %xmm0
-	mulss	%xmm0, %xmm0
-	addss	%xmm1, %xmm0
-	movss	%xmm0, -788(%rbp)
-	movss	-796(%rbp), %xmm0
-	movaps	%xmm0, %xmm1
-	mulss	-832(%rbp), %xmm1
-	movss	-792(%rbp), %xmm0
-	mulss	-828(%rbp), %xmm0
-	addss	%xmm1, %xmm0
-	divss	-788(%rbp), %xmm0
-	movl	-868(%rbp), %eax
-	cltq
-	movss	%xmm0, -528(%rbp,%rax,4)
-	movss	-792(%rbp), %xmm0
-	mulss	-832(%rbp), %xmm0
-	movss	-796(%rbp), %xmm1
-	mulss	-828(%rbp), %xmm1
-	subss	%xmm1, %xmm0
-	divss	-788(%rbp), %xmm0
-	movl	-868(%rbp), %eax
-	cltq
-	movss	%xmm0, -400(%rbp,%rax,4)
-	addl	$1, -868(%rbp)
-.L49:
-	cmpl	$31, -868(%rbp)
-	jle	.L50
-	movl	$0, -868(%rbp)
-	jmp	.L51
-.L52:
-	movl	-868(%rbp), %eax
-	cltq
-	movss	.LC4(%rip), %xmm0
-	movss	%xmm0, -272(%rbp,%rax,4)
-	movl	-868(%rbp), %eax
-	cltq
-	pxor	%xmm0, %xmm0
-	movss	%xmm0, -144(%rbp,%rax,4)
-	addl	$1, -868(%rbp)
-.L51:
-	cmpl	$31, -868(%rbp)
-	jle	.L52
-	movl	$0, -864(%rbp)
-	jmp	.L53
-.L58:
-	pxor	%xmm0, %xmm0
-	movss	%xmm0, -856(%rbp)
-	movl	$0, -868(%rbp)
-	jmp	.L54
-.L55:
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-528(%rbp,%rax,4), %xmm1
-	movl	-868(%rbp), %eax
+	movss	-588(%rbp), %xmm1
+	mulss	%xmm1, %xmm0
+	movss	%xmm0, -580(%rbp)
+	movl	-632(%rbp), %eax
 	cltq
 	movss	-272(%rbp,%rax,4), %xmm0
-	mulss	%xmm1, %xmm0
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-400(%rbp,%rax,4), %xmm2
-	movl	-868(%rbp), %eax
+	mulss	-584(%rbp), %xmm0
+	movl	-632(%rbp), %eax
 	cltq
 	movss	-144(%rbp,%rax,4), %xmm1
-	mulss	%xmm2, %xmm1
+	mulss	-580(%rbp), %xmm1
 	subss	%xmm1, %xmm0
 	addss	%xmm0, %xmm0
-	movss	-856(%rbp), %xmm1
+	movss	-620(%rbp), %xmm1
 	addss	%xmm1, %xmm0
-	movss	%xmm0, -856(%rbp)
-	addl	$1, -868(%rbp)
-.L54:
-	cmpl	$31, -868(%rbp)
-	jle	.L55
-	movl	-864(%rbp), %eax
+	movss	%xmm0, -620(%rbp)
+	addl	$1, -632(%rbp)
+.L52:
+	cmpl	$31, -632(%rbp)
+	jle	.L53
+	movl	-628(%rbp), %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
 	leaq	s4d_kernel(%rip), %rax
-	movss	-856(%rbp), %xmm0
+	movss	-620(%rbp), %xmm0
 	movss	%xmm0, (%rdx,%rax)
-	movl	$0, -868(%rbp)
-	jmp	.L56
-.L57:
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-272(%rbp,%rax,4), %xmm1
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-784(%rbp,%rax,4), %xmm0
-	mulss	%xmm1, %xmm0
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-144(%rbp,%rax,4), %xmm2
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-656(%rbp,%rax,4), %xmm1
-	mulss	%xmm2, %xmm1
-	subss	%xmm1, %xmm0
-	movss	%xmm0, -840(%rbp)
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-272(%rbp,%rax,4), %xmm1
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-656(%rbp,%rax,4), %xmm0
-	mulss	%xmm0, %xmm1
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-144(%rbp,%rax,4), %xmm2
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-784(%rbp,%rax,4), %xmm0
-	mulss	%xmm2, %xmm0
-	addss	%xmm1, %xmm0
-	movss	%xmm0, -836(%rbp)
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-840(%rbp), %xmm0
-	movss	%xmm0, -272(%rbp,%rax,4)
-	movl	-868(%rbp), %eax
-	cltq
-	movss	-836(%rbp), %xmm0
-	movss	%xmm0, -144(%rbp,%rax,4)
-	addl	$1, -868(%rbp)
-.L56:
-	cmpl	$31, -868(%rbp)
-	jle	.L57
-	addl	$1, -864(%rbp)
-.L53:
-	cmpl	$4095, -864(%rbp)
-	jle	.L58
-	movl	-872(%rbp), %eax
+	addl	$1, -628(%rbp)
+.L51:
+	cmpl	$4095, -628(%rbp)
+	jle	.L54
+	movl	-636(%rbp), %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
-	movq	-920(%rbp), %rax
+	movq	-680(%rbp), %rax
 	addq	%rdx, %rax
 	movss	(%rax), %xmm0
-	movss	%xmm0, -844(%rbp)
-	movl	$0, -864(%rbp)
-	jmp	.L59
-.L62:
-	movl	-864(%rbp), %eax
+	movss	%xmm0, -608(%rbp)
+	movl	$0, -628(%rbp)
+	jmp	.L55
+.L58:
+	movl	-628(%rbp), %eax
 	sall	$6, %eax
 	movl	%eax, %edx
-	movl	-872(%rbp), %eax
+	movl	-636(%rbp), %eax
 	addl	%edx, %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
-	movq	-928(%rbp), %rax
+	movq	-688(%rbp), %rax
 	addq	%rdx, %rax
 	movss	(%rax), %xmm0
-	movss	-844(%rbp), %xmm1
+	movss	-608(%rbp), %xmm1
 	mulss	%xmm1, %xmm0
-	movss	%xmm0, -852(%rbp)
-	movl	$0, -860(%rbp)
-	jmp	.L60
-.L61:
-	movl	-860(%rbp), %eax
+	movss	%xmm0, -616(%rbp)
+	movl	$0, -624(%rbp)
+	jmp	.L56
+.L57:
+	movl	-624(%rbp), %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
 	leaq	s4d_kernel(%rip), %rax
 	movss	(%rdx,%rax), %xmm1
-	movl	-864(%rbp), %eax
-	subl	-860(%rbp), %eax
+	movl	-628(%rbp), %eax
+	subl	-624(%rbp), %eax
 	sall	$6, %eax
 	movl	%eax, %edx
-	movl	-872(%rbp), %eax
+	movl	-636(%rbp), %eax
 	addl	%edx, %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
-	movq	-928(%rbp), %rax
+	movq	-688(%rbp), %rax
 	addq	%rdx, %rax
 	movss	(%rax), %xmm0
 	mulss	%xmm1, %xmm0
-	movss	-852(%rbp), %xmm1
+	movss	-616(%rbp), %xmm1
 	addss	%xmm1, %xmm0
-	movss	%xmm0, -852(%rbp)
-	addl	$1, -860(%rbp)
-.L60:
-	movl	-860(%rbp), %eax
-	cmpl	-864(%rbp), %eax
-	jle	.L61
-	movl	-864(%rbp), %eax
+	movss	%xmm0, -616(%rbp)
+	addl	$1, -624(%rbp)
+.L56:
+	movl	-624(%rbp), %eax
+	cmpl	-628(%rbp), %eax
+	jle	.L57
+	movl	-628(%rbp), %eax
 	sall	$6, %eax
 	movl	%eax, %edx
-	movl	-872(%rbp), %eax
+	movl	-636(%rbp), %eax
 	addl	%edx, %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
-	movq	-936(%rbp), %rax
+	movq	-696(%rbp), %rax
 	addq	%rdx, %rax
-	movss	-852(%rbp), %xmm0
+	movss	-616(%rbp), %xmm0
 	movss	%xmm0, (%rax)
-	addl	$1, -864(%rbp)
-.L59:
-	cmpl	$4095, -864(%rbp)
-	jle	.L62
-	addl	$1, -872(%rbp)
+	addl	$1, -628(%rbp)
+.L55:
+	cmpl	$4095, -628(%rbp)
+	jle	.L58
+	addl	$1, -636(%rbp)
 .L48:
-	cmpl	$63, -872(%rbp)
-	jle	.L63
+	cmpl	$63, -636(%rbp)
+	jle	.L59
 	nop
 	movq	-8(%rbp), %rax
 	subq	%fs:40, %rax
-	je	.L64
+	je	.L60
 	call	__stack_chk_fail@PLT
-.L64:
+.L60:
 	leave
 	.cfi_def_cfa 7, 8
 	ret
@@ -806,8 +798,8 @@ gelu_inplace:
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
 	movl	$0, -12(%rbp)
-	jmp	.L66
-.L67:
+	jmp	.L62
+.L63:
 	movl	-12(%rbp), %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
@@ -842,10 +834,10 @@ gelu_inplace:
 	mulss	-32(%rbp), %xmm0
 	movss	%xmm0, (%rax)
 	addl	$1, -12(%rbp)
-.L66:
+.L62:
 	movl	-12(%rbp), %eax
 	cmpl	-28(%rbp), %eax
-	jl	.L67
+	jl	.L63
 	nop
 	nop
 	leave
@@ -874,8 +866,8 @@ softmax_inplace:
 	movss	(%rax), %xmm0
 	movss	%xmm0, -24(%rbp)
 	movl	$1, -28(%rbp)
-	jmp	.L69
-.L72:
+	jmp	.L65
+.L68:
 	movl	-28(%rbp), %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
@@ -883,7 +875,7 @@ softmax_inplace:
 	addq	%rdx, %rax
 	movss	(%rax), %xmm0
 	comiss	-24(%rbp), %xmm0
-	jbe	.L70
+	jbe	.L66
 	movl	-28(%rbp), %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
@@ -891,17 +883,17 @@ softmax_inplace:
 	addq	%rdx, %rax
 	movss	(%rax), %xmm0
 	movss	%xmm0, -24(%rbp)
-.L70:
+.L66:
 	addl	$1, -28(%rbp)
-.L69:
+.L65:
 	movl	-28(%rbp), %eax
 	cmpl	-44(%rbp), %eax
-	jl	.L72
+	jl	.L68
 	pxor	%xmm0, %xmm0
 	movss	%xmm0, -20(%rbp)
 	movl	$0, -28(%rbp)
-	jmp	.L73
-.L74:
+	jmp	.L69
+.L70:
 	movl	-28(%rbp), %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
@@ -929,13 +921,13 @@ softmax_inplace:
 	addss	%xmm1, %xmm0
 	movss	%xmm0, -20(%rbp)
 	addl	$1, -28(%rbp)
-.L73:
+.L69:
 	movl	-28(%rbp), %eax
 	cmpl	-44(%rbp), %eax
-	jl	.L74
+	jl	.L70
 	movl	$0, -28(%rbp)
-	jmp	.L75
-.L76:
+	jmp	.L71
+.L72:
 	movl	-28(%rbp), %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
@@ -950,10 +942,10 @@ softmax_inplace:
 	divss	-20(%rbp), %xmm0
 	movss	%xmm0, (%rax)
 	addl	$1, -28(%rbp)
-.L75:
+.L71:
 	movl	-28(%rbp), %eax
 	cmpl	-44(%rbp), %eax
-	jl	.L76
+	jl	.L72
 	nop
 	nop
 	movq	-8(%rbp), %rbx
@@ -1006,8 +998,8 @@ argmax:
 	movl	%esi, -28(%rbp)
 	movl	$0, -8(%rbp)
 	movl	$1, -4(%rbp)
-	jmp	.L80
-.L83:
+	jmp	.L76
+.L79:
 	movl	-4(%rbp), %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
@@ -1021,15 +1013,15 @@ argmax:
 	addq	%rdx, %rax
 	movss	(%rax), %xmm1
 	comiss	%xmm1, %xmm0
-	jbe	.L81
+	jbe	.L77
 	movl	-4(%rbp), %eax
 	movl	%eax, -8(%rbp)
-.L81:
+.L77:
 	addl	$1, -4(%rbp)
-.L80:
+.L76:
 	movl	-4(%rbp), %eax
 	cmpl	-28(%rbp), %eax
-	jl	.L83
+	jl	.L79
 	movl	-8(%rbp), %eax
 	popq	%rbp
 	.cfi_def_cfa 7, 8

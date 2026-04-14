@@ -1,122 +1,219 @@
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import numpy as np
+"""
+Generates all required M1 visualisation images from the saved model checkpoint.
+
+
+Saves to images/:
+    training_curves.png      - loss + val accuracy over epochs
+    confusion_matrix.png     - normalised confusion matrix heatmap
+    per_class_metrics.png    - precision, recall, F1 per class
+    sample_predictions.png   - 3x3 grid of test predictions
+"""
+
 import os
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
+from torch.utils.data import DataLoader, TensorDataset
 
+from model import GalaxyClassifierS4D
+from model.functions import load_data
+
+# Settings - make sure these match what you used during training
+DEVICE     = "cuda" if torch.cuda.is_available() else "cpu"
+CHECKPOINT = "model_params/galaxys4-29070.pth"
+COLORED    = False
+BATCH_SIZE = 64
+CLASSES    = ["Smooth Round", "Smooth Cigar", "Edge-on Disk", "Unbarred Spiral"]
+RNG_SEED   = 29070
 os.makedirs("images", exist_ok=True)
-plt.rcParams['figure.dpi'] = 150
-plt.rcParams['font.size'] = 11
 
-# ── 1. Inference time vs optimization level ───────────────────────────────
-fig, ax = plt.subplots(figsize=(8, 5))
-flags   = ['-O0', '-O1', '-O2', '-O3', '-Ofast']
-times   = [6.211, 1.602, 1.885, 1.802, 1.610]
-colors  = ['#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f39c12']
-bars = ax.bar(flags, times, color=colors, edgecolor='white', linewidth=0.8)
-for bar, t in zip(bars, times):
-    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1,
-            f'{t:.3f}s', ha='center', va='bottom', fontsize=10, fontweight='bold')
-ax.set_xlabel('GCC Optimization Flag')
-ax.set_ylabel('Inference Time (seconds)')
-ax.set_title('Inference Time vs GCC Optimization Level\n(sample_09, x86-64, gcc 13.3.0)')
-ax.set_ylim(0, 7.5)
-ax.axhline(y=6.211, color='red', linestyle='--', alpha=0.3, label='-O0 baseline')
-ax.legend()
-ax.grid(axis='y', alpha=0.3)
-plt.tight_layout()
-plt.savefig('images/timing_vs_optimization.png')
-plt.close()
-print("Saved: images/timing_vs_optimization.png")
+print(f"Using device: {DEVICE}")
+print(f"Loading checkpoint: {CHECKPOINT}")
 
-# ── 2. Per-layer timing breakdown (estimated from profiling) ─────────────
-fig, ax = plt.subplots(figsize=(9, 5))
-layers  = ['Hilbert\nScan', 'Linear\n(uproject)', 'S4D\nLayer 1', 'GELU 1',
-           'S4D\nLayer 2', 'GELU 2', 'TakeLast\nTimestep', 'FC\nHead', 'Softmax']
-# S4D dominates: ~95% of time split between two S4D layers
-total = 1.885
-pcts  = [0.001, 0.002, 0.468, 0.001, 0.468, 0.001, 0.0001, 0.0001, 0.0001]
-times_layer = [p * total for p in pcts]
-colors2 = ['#95a5a6','#3498db','#e74c3c','#2ecc71','#e74c3c','#2ecc71','#9b59b6','#f39c12','#1abc9c']
-bars2 = ax.bar(layers, times_layer, color=colors2, edgecolor='white', linewidth=0.8)
-for bar, t in zip(bars2, times_layer):
-    if t > 0.01:
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.002,
-                f'{t:.3f}s', ha='center', va='bottom', fontsize=9, fontweight='bold')
-ax.set_xlabel('Layer')
-ax.set_ylabel('Estimated Time (seconds)')
-ax.set_title('Per-Layer Inference Time Breakdown (-O2)\nS4D layers dominate due to O(L²·H) complexity')
-ax.grid(axis='y', alpha=0.3)
-plt.tight_layout()
-plt.savefig('images/per_layer_timing.png')
-plt.close()
-print("Saved: images/per_layer_timing.png")
+# Load the trained model from checkpoint
+# The checkpoint contains the model weights and training history
 
-# ── 3. Instruction count vs optimization level ───────────────────────────
-fig, ax = plt.subplots(figsize=(7, 5))
-flags3  = ['-O0', '-O2', '-O3']
-lines   = [1187, 1091, 1704]
-instrs  = [29,   36,   38]
-x = np.arange(len(flags3))
-w = 0.35
-b1 = ax.bar(x - w/2, lines,  w, label='Assembly lines', color='#3498db', edgecolor='white')
-b2 = ax.bar(x + w/2, instrs, w, label='Multiply instructions', color='#e74c3c', edgecolor='white')
-for bar, v in zip(b1, lines):
-    ax.text(bar.get_x()+bar.get_width()/2, bar.get_height()+10,
-            str(v), ha='center', va='bottom', fontsize=10, fontweight='bold')
-for bar, v in zip(b2, instrs):
-    ax.text(bar.get_x()+bar.get_width()/2, bar.get_height()+10,
-            str(v), ha='center', va='bottom', fontsize=10, fontweight='bold')
-ax.set_xticks(x)
-ax.set_xticklabels(flags3)
-ax.set_xlabel('GCC Optimization Flag')
-ax.set_ylabel('Count')
-ax.set_title('Assembly Lines and Multiply Instructions\nvs GCC Optimization Level')
-ax.legend()
-ax.grid(axis='y', alpha=0.3)
-plt.tight_layout()
-plt.savefig('images/instruction_count.png')
-plt.close()
-print("Saved: images/instruction_count.png")
+model = GalaxyClassifierS4D(colored=COLORED).to(DEVICE)
+checkpoint = torch.load(CHECKPOINT, map_location=DEVICE)
 
-# ── 4. Memory footprint breakdown ────────────────────────────────────────
+# handle both old format (raw state dict) and new format (dict with history)
+if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+    model.load_state_dict(checkpoint["model_state_dict"])
+    history = checkpoint.get("history", None)
+else:
+    model.load_state_dict(checkpoint)
+    history = None
+
+model.eval()
+print("Model loaded.\n")
+
+# Load test data and run inference
+# We run the whole test set through the model to get predictions
+
+print("Loading test data...")
+X_test, y_test_onehot, y_test = load_data(
+    root="./data", download=True, train=False, colored=COLORED
+)
+test_loader = DataLoader(TensorDataset(X_test, y_test_onehot), batch_size=BATCH_SIZE)
+
+all_preds, all_probs, all_labels = [], [], []
+
+with torch.no_grad():
+    for xb, yb in test_loader:
+        xb     = xb.to(DEVICE)
+        probs  = model(xb, return_logits=False)
+        preds  = probs.argmax(dim=1)
+        labels = yb.argmax(dim=1)
+        all_probs.append(probs.cpu())
+        all_preds.append(preds.cpu())
+        all_labels.append(labels.cpu())
+
+all_probs  = torch.cat(all_probs)
+all_preds  = torch.cat(all_preds).numpy()
+all_labels = torch.cat(all_labels).numpy()
+
+accuracy = (all_preds == all_labels).mean()
+print(f"Test Accuracy: {accuracy*100:.2f}%\n")
+
+# Plot 1: Training curves
+# Shows how loss and validation accuracy changed over epochs
+
+if history:
+    epochs = range(1, len(history["loss"]) + 1)
+    fig, ax1 = plt.subplots(figsize=(9, 5))
+
+    ax1.set_xlabel("Epoch")
+    ax1.set_ylabel("Training Loss", color="#C44E52")
+    ax1.plot(epochs, history["loss"], color="#C44E52", linewidth=2, label="Train Loss")
+    ax1.tick_params(axis="y", labelcolor="#C44E52")
+
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("Validation Accuracy", color="#4C72B0")
+    ax2.plot(epochs, history["val_accuracy"], color="#4C72B0", linewidth=2,
+             linestyle="--", label="Val Accuracy")
+    ax2.axhline(y=0.65, color="gray", linestyle=":", linewidth=1.2, label="65% target")
+    ax2.tick_params(axis="y", labelcolor="#4C72B0")
+
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc="lower left")
+
+    plt.title("Training Loss and Validation Accuracy")
+    fig.tight_layout()
+    plt.savefig("images/training_curves.png", dpi=150, bbox_inches="tight")
+    plt.close()
+    print("Saved: images/training_curves.png")
+else:
+    print("No training history found in checkpoint - skipping training_curves.png")
+
+# Plot 2: Confusion matrix
+# Rows = true class, columns = predicted class, normalised by true class
+# A perfect model would have 1.0 on the diagonal and 0.0 everywhere else
+
+cm      = confusion_matrix(all_labels, all_preds)
+cm_norm = cm.astype(float) / cm.sum(axis=1, keepdims=True)
+
 fig, ax = plt.subplots(figsize=(7, 6))
-labels4 = ['Model parameters\n(82.5 KB)', 'buf_proj\n(1024 KB)', 
-           'buf_s4d1+s4d2\n(2048 KB)', 'Other buffers\n(32.3 KB)']
-sizes4  = [82.5, 1024, 2048, 32.3]
-colors4 = ['#3498db', '#e74c3c', '#e74c3c', '#95a5a6']
-explode = (0.05, 0, 0.05, 0)
-wedges, texts, autotexts = ax.pie(sizes4, labels=labels4, colors=colors4,
-                                   explode=explode, autopct='%1.1f%%',
-                                   startangle=140, pctdistance=0.75)
-for at in autotexts:
-    at.set_fontsize(10)
-    at.set_fontweight('bold')
-ax.set_title('Memory Footprint Breakdown\nTotal: ~3.1 MB', fontsize=12, fontweight='bold')
+sns.heatmap(cm_norm, annot=True, fmt=".2f", cmap="Blues",
+            xticklabels=CLASSES, yticklabels=CLASSES,
+            linewidths=0.5, ax=ax, vmin=0, vmax=1)
+ax.set_xlabel("Predicted Class")
+ax.set_ylabel("True Class")
+ax.set_title("Confusion Matrix (Normalised by True Class)")
+plt.xticks(rotation=20, ha="right")
 plt.tight_layout()
-plt.savefig('images/memory_footprint.png')
+plt.savefig("images/confusion_matrix.png", dpi=150, bbox_inches="tight")
 plt.close()
-print("Saved: images/memory_footprint.png")
+print("Saved: images/confusion_matrix.png")
 
-# ── 5. C vs PyTorch timing comparison ────────────────────────────────────
-fig, ax = plt.subplots(figsize=(7, 5))
-impls   = ['PyTorch\n(estimated)', 'C -O0', 'C -O1', 'C -O2', 'C -O3', 'C -Ofast']
-times5  = [0.4, 6.211, 1.602, 1.885, 1.802, 1.610]
-colors5 = ['#27ae60','#e74c3c','#3498db','#9b59b6','#f39c12','#1abc9c']
-bars5 = ax.bar(impls, times5, color=colors5, edgecolor='white', linewidth=0.8)
-for bar, t in zip(bars5, times5):
-    ax.text(bar.get_x()+bar.get_width()/2, bar.get_height()+0.05,
-            f'{t:.3f}s', ha='center', va='bottom', fontsize=9, fontweight='bold')
-ax.set_xlabel('Implementation')
-ax.set_ylabel('Inference Time (seconds)')
-ax.set_title('C Implementation vs PyTorch\nInference Time Comparison')
-ax.grid(axis='y', alpha=0.3)
-ax.set_ylim(0, 7.5)
-green_patch = mpatches.Patch(color='#27ae60', label='PyTorch (BLAS + multithreaded)')
-blue_patch  = mpatches.Patch(color='#3498db', label='C naive (single-threaded)')
-ax.legend(handles=[green_patch, blue_patch])
+
+# Plot 3: Per-class precision, recall and F1
+# Precision = of everything predicted as class X, how many were actually X
+# Recall    = of all actual class X samples, how many did we catch
+# F1        = harmonic mean of precision and recall
+
+precision = precision_score(all_labels, all_preds, average=None)
+recall    = recall_score(all_labels, all_preds, average=None)
+f1        = f1_score(all_labels, all_preds, average=None)
+
+x     = np.arange(len(CLASSES))
+width = 0.25
+
+fig, ax = plt.subplots(figsize=(10, 6))
+b1 = ax.bar(x - width, precision, width, label="Precision", color="#4C72B0")
+b2 = ax.bar(x,         recall,    width, label="Recall",    color="#55A868")
+b3 = ax.bar(x + width, f1,        width, label="F1-Score",  color="#C44E52")
+
+for bars in [b1, b2, b3]:
+    for bar in bars:
+        h = bar.get_height()
+        ax.annotate(f"{h:.2f}",
+                    xy=(bar.get_x() + bar.get_width() / 2, h),
+                    xytext=(0, 3), textcoords="offset points",
+                    ha="center", va="bottom", fontsize=8)
+
+ax.set_ylabel("Score")
+ax.set_title("Per-Class Precision, Recall and F1-Score")
+ax.set_xticks(x)
+ax.set_xticklabels(CLASSES, rotation=15, ha="right")
+ax.set_ylim(0, 1.05)
+ax.legend()
+ax.grid(axis="y", alpha=0.3)
+
+macro_p = precision.mean()
+macro_r = recall.mean()
+macro_f = f1.mean()
+ax.text(0.98, 0.02,
+        f"Macro avg - Precision: {macro_p:.2f}  Recall: {macro_r:.2f}  F1: {macro_f:.2f}",
+        transform=ax.transAxes, ha="right", va="bottom", fontsize=9,
+        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.4))
+
 plt.tight_layout()
-plt.savefig('images/c_vs_pytorch.png')
+plt.savefig("images/per_class_metrics.png", dpi=150, bbox_inches="tight")
 plt.close()
-print("Saved: images/c_vs_pytorch.png")
+print("Saved: images/per_class_metrics.png")
 
-print("\nAll 5 plots saved to images/")
+# Plot 4: Sample predictions grid (3x3)
+# Shows 6 correct predictions and 3 confident wrong ones
+# Green title = correct, red title = wrong
+
+np.random.seed(RNG_SEED)
+
+correct_idx   = np.where(all_preds == all_labels)[0]
+incorrect_idx = np.where(all_preds != all_labels)[0]
+
+# pick the 3 most confidently wrong predictions - interesting to analyse
+incorrect_conf = all_probs[incorrect_idx].max(dim=1).values.numpy()
+top_incorrect  = incorrect_idx[np.argsort(-incorrect_conf)[:3]]
+
+selected = np.concatenate([np.random.choice(correct_idx, 6, replace=False), top_incorrect])
+np.random.shuffle(selected)
+selected = selected[:9]
+
+fig, axes = plt.subplots(3, 3, figsize=(10, 10))
+fig.suptitle("Sample Predictions", fontsize=14, fontweight="bold")
+
+for ax, idx in zip(axes.flat, selected):
+    img     = X_test[idx].squeeze().numpy()
+    true    = all_labels[idx]
+    pred    = all_preds[idx]
+    conf    = all_probs[idx][pred].item()
+    correct = (true == pred)
+
+    ax.imshow(img, cmap="magma")
+    ax.axis("off")
+
+    color = "#2ecc71" if correct else "#e74c3c"
+    ax.set_title(
+        f"True:  {CLASSES[true]}\nPred:  {CLASSES[pred]}\nConf: {conf:.1%}",
+        fontsize=8, color=color, pad=4
+    )
+
+plt.tight_layout()
+plt.savefig("images/sample_predictions.png", dpi=150, bbox_inches="tight")
+plt.close()
+print("Saved: images/sample_predictions.png")
+
+print(f"\nAll done! Test accuracy: {accuracy*100:.2f}%")
