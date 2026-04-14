@@ -1,34 +1,145 @@
-=== Benchmark Results - Echo Theory M2 ===
-Platform: x86-64, Ubuntu 24.04, gcc 13.3.0
-Test sample: sample_09 (true=0 Smooth Round, pred=0 Smooth Round - CORRECT)
 
---- Timing (real wall clock) ---
--O0:    6.211s  (baseline)
--O1:    1.602s  (3.88x speedup)
--O2:    1.885s  (3.30x speedup)
--O3:    1.802s  (3.45x speedup)
--Ofast: 1.610s  (3.86x speedup)
+---------- -O0 ----------
+=== S4D Galaxy Classifier - Performance Benchmark ===
+Image: ../test_data/sample_09_input.bin
+Iterations: 100
 
---- Assembly line counts ---
-nn_O0.s:  1187 lines
-nn_O2.s:  1091 lines
-nn_O3.s:  1704 lines
+--- Per-Layer Timing (mean over 100 iterations) ---
+Layer                  Mean (ms)   % Total
+-----                  ---------   -------
+  hilbert_scan             0.031     0.00%
+  uproject                 2.044     0.03%
+  s4d_layer_1           3968.805    49.87%
+  gelu_1                   9.995     0.13%
+  s4d_layer_2           3967.559    49.86%
+  gelu_2                   9.453     0.12%
+  take_last                0.001     0.00%
+  fc_head                  0.002     0.00%
+  softmax                  0.002     0.00%
 
---- Multiply instruction counts ---
--O0: 29
--O2: 36
--O3: 38
+--- Total Inference ---
+  Mean:    7957.893 ms
+  Std dev: 232.367 ms
+  Throughput: 0.13 images/sec
 
---- Memory footprint ---
-Parameters:  82.5 KB
-Buffers:     3104.3 KB
-Total:       3186.8 KB
+--- Memory Footprint ---
+  Model parameters:    82.5 KB
+  Activation buffers:3088.3 KB
+  S4D kernel buffer:   16.0 KB
+  Total:             3186.8 KB
 
---- Validation sample_09 ---
-hilbert_scan:  MSE=0.00e+00  PASS
-uproject:      MSE=0.00e+00  PASS
-s4d_layer_1:   MSE=1.67e-10  PASS
-gelu_1:        MSE=2.91e-08  MAE=1.16e-04 (marginal - tiny float accumulation)
-s4d_layer_2:   MSE=4.38e-07  MAE=3.37e-04 (within expected range)
-softmax:       MSE=4.80e-08  final probs match to 3 decimal places
-Final prediction: CORRECT (Class 0 Smooth Round, conf=0.9256)
+---------- -O1 ----------
+=== S4D Galaxy Classifier - Performance Benchmark ===
+Image: ../test_data/sample_09_input.bin
+Iterations: 100
+
+--- Per-Layer Timing (mean over 100 iterations) ---
+Layer                  Mean (ms)   % Total
+-----                  ---------   -------
+  hilbert_scan             0.014     0.00%
+  uproject                 0.381     0.01%
+  s4d_layer_1           1664.504    49.77%
+  gelu_1                   8.084     0.24%
+  s4d_layer_2           1663.787    49.75%
+  gelu_2                   7.519     0.22%
+  take_last                0.000     0.00%
+  fc_head                  0.001     0.00%
+  softmax                  0.003     0.00%
+
+--- Total Inference ---
+  Mean:    3344.294 ms
+  Std dev: 102.274 ms
+  Throughput: 0.30 images/sec
+
+--- Memory Footprint ---
+  Model parameters:    82.5 KB
+  Activation buffers:3088.3 KB
+  S4D kernel buffer:   16.0 KB
+  Total:             3186.8 KB
+
+---------- -O2 ----------
+=== S4D Galaxy Classifier - Performance Benchmark ===
+Image: ../test_data/sample_09_input.bin
+Iterations: 100
+
+--- Per-Layer Timing (mean over 100 iterations) ---
+Layer                  Mean (ms)   % Total
+-----                  ---------   -------
+  hilbert_scan             0.015     0.00%
+  uproject                 0.508     0.02%
+  s4d_layer_1           1584.863    49.51%
+  gelu_1                   8.054     0.25%
+  s4d_layer_2           1600.478    49.99%
+  gelu_2                   7.448     0.23%
+  take_last                0.000     0.00%
+  fc_head                  0.003     0.00%
+  softmax                  0.003     0.00%
+
+--- Total Inference ---
+  Mean:    3201.373 ms
+  Std dev: 87.144 ms
+  Throughput: 0.31 images/sec
+
+--- Memory Footprint ---
+  Model parameters:    82.5 KB
+  Activation buffers:3088.3 KB
+  S4D kernel buffer:   16.0 KB
+  Total:             3186.8 KB
+
+---------- -O3 ----------
+=== S4D Galaxy Classifier - Performance Benchmark ===
+Image: ../test_data/sample_09_input.bin
+Iterations: 100
+
+--- Per-Layer Timing (mean over 100 iterations) ---
+Layer                  Mean (ms)   % Total
+-----                  ---------   -------
+  hilbert_scan             0.014     0.00%
+  uproject                 0.755     0.02%
+  s4d_layer_1           1661.813    49.87%
+  gelu_1                   8.404     0.25%
+  s4d_layer_2           1654.028    49.63%
+  gelu_2                   7.563     0.23%
+  take_last                0.000     0.00%
+  fc_head                  0.001     0.00%
+  softmax                  0.003     0.00%
+
+--- Total Inference ---
+  Mean:    3332.582 ms
+  Std dev: 110.505 ms
+  Throughput: 0.30 images/sec
+
+--- Memory Footprint ---
+  Model parameters:    82.5 KB
+  Activation buffers:3088.3 KB
+  S4D kernel buffer:   16.0 KB
+  Total:             3186.8 KB
+
+---------- -Ofast ----------
+=== S4D Galaxy Classifier - Performance Benchmark ===
+Image: ../test_data/sample_09_input.bin
+Iterations: 100
+
+--- Per-Layer Timing (mean over 100 iterations) ---
+Layer                  Mean (ms)   % Total
+-----                  ---------   -------
+  hilbert_scan             0.008     0.00%
+  uproject                 0.765     0.04%
+  s4d_layer_1            882.346    49.74%
+  gelu_1                   1.276     0.07%
+  s4d_layer_2            888.230    50.07%
+  gelu_2                   1.267     0.07%
+  take_last                0.000     0.00%
+  fc_head                  0.001     0.00%
+  softmax                  0.001     0.00%
+
+--- Total Inference ---
+  Mean:    1773.894 ms
+  Std dev: 122.968 ms
+  Throughput: 0.56 images/sec
+
+--- Memory Footprint ---
+  Model parameters:    82.5 KB
+  Activation buffers:3088.3 KB
+  S4D kernel buffer:   16.0 KB
+  Total:             3186.8 KB
