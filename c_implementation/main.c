@@ -1,3 +1,27 @@
+/*
+ * main.c - Galaxy Classifier Demo Program
+ * ========================================
+ * Standalone bare-metal C inference demo for the S4D galaxy classifier.
+ * No external libraries, no PyTorch, no numpy - pure C11 with only
+ * standard library (stdio, stdlib) and our own nn.h/nn.c.
+ *
+ * Usage:
+ *   ./galaxy_infer <image.bin> [weights.bin]
+ *
+ *   image.bin   - binary file of C_IN*64*64 float32 values (channel-major)
+ *   weights.bin - model parameters file (default: ../model_weights.bin)
+ *
+ * Design decisions (bare-metal constraints):
+ *   - Static ModelParams struct: all weights in one compile-time struct,
+ *     no heap allocation for parameters (mirrors RISC-V data section)
+ *   - Single malloc for image only: avoids heap for all inference buffers
+ *   - Direct binary weight loading: single fread() into flat struct layout
+ *   - No abstraction layers: main calls forward() directly, no wrappers
+ *
+ * Output format matches milestone spec:
+ *   Class probabilities for all 4 galaxy morphology classes
+ *   Predicted class label (argmax of probabilities)
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include "nn.h"
