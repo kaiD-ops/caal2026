@@ -67,10 +67,10 @@ class GalaxyClassifierS4D(nn.Module):
 
         # S4 layers
         self.s4_1 = S4D(d_model=d_model, d_state=s4_state, transposed=False)
-        self.act1 = nn.GELU()
+        self.act1 = nn.GELU(approximate='tanh')
 
         self.s4_2 = S4D(d_model=d_model, d_state=s4_state, transposed=False)
-        self.act2 = nn.GELU()
+        self.act2 = nn.GELU(approximate='tanh')
 
         # Take last timestep
         self.take_last = TakeLastTimestep()

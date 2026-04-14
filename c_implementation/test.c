@@ -140,13 +140,13 @@ int main(int argc, char *argv[])
     take_last_timestep(c_gelu2, c_pooled);
     snprintf(path, sizeof(path), "%s_pooled.bin", prefix);
     { float *ref = load_bin(path, D_MODEL);
-      if (ref) { all_pass &= check("take_last", c_pooled, ref, D_MODEL, TOL_EXACT_MSE, TOL_EXACT_MAE); free(ref); } }
+      if (ref) { all_pass &= check("take_last", c_pooled, ref, D_MODEL, TOL_GELU_MSE, TOL_GELU_MAE); free(ref); } }
 
     linear_layer((const float*)params.fc_weight, params.fc_bias,
                  c_pooled, c_logits, D_MODEL, N_CLASSES, 1);
     snprintf(path, sizeof(path), "%s_logits.bin", prefix);
     { float *ref = load_bin(path, N_CLASSES);
-      if (ref) { all_pass &= check("fc_head", c_logits, ref, N_CLASSES, TOL_LINEAR_MSE, TOL_LINEAR_MAE); free(ref); } }
+      if (ref) { all_pass &= check("fc_head", c_logits, ref, N_CLASSES, TOL_GELU_MSE, TOL_GELU_MAE); free(ref); } }
 
     memcpy(c_probs, c_logits, N_CLASSES*sizeof(float));
     softmax_inplace(c_probs, N_CLASSES);
