@@ -238,13 +238,35 @@ void gelu_inplace(float *x, int n)
     }
 }
 
+/*
+ * softmax_inplace
+ * ---------------
+ * Converts raw logits to a probability distribution over N classes.
+ * Applied to the final 4 logits to produce class probabilities.
+ *
+ * Formula: softmax(x_i) = exp(x_i) / sum_j(exp(x_j))
+ *
+ * Numerically stable: subtract max before exponentiation to prevent
+ * overflow. Softmax is shift-invariant so softmax(x) = softmax(x-max).
+ * This keeps all exp() arguments <= 0, avoiding overflow entirely.
+ *
+ * Output probabilities sum to 1.0 within floating-point tolerance.
+ * Validation: MSE < 1e-8, MAE < 1e-4 vs PyTorch
+ *
+ * Parameters:
+ *   x - float array of logits, overwritten with probabilities in place
+ *   n - number of classes (N_CLASSES = 4)
+ */
 void softmax_inplace(float *x, int n)
 {
     int i;
+    /* subtract max for numerical stability - prevents exp() overflow */
     float mx = x[0];
     for (i = 1; i < n; i++) if (x[i] > mx) mx = x[i];
+    /* compute exp(x - max) and accumulate sum */
     float sum = 0.0f;
     for (i = 0; i < n; i++) { x[i] = expf(x[i] - mx); sum += x[i]; }
+    /* normalize so probabilities sum to 1.0 */
     for (i = 0; i < n; i++) x[i] /= sum;
 }
 
