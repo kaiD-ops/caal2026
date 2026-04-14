@@ -55,12 +55,43 @@ err:
     return -1;
 }
 
+/*
+ * hilbert_scan
+ * ------------
+ * Reorders pixels from a 2D image into a 1D sequence following the
+ * Hilbert curve traversal order. This preserves spatial locality:
+ * pixels that are close in 2D space stay close in the 1D sequence,
+ * which helps the S4 model capture spatial patterns effectively.
+ *
+ * The pre-loaded hilbert_indices array maps each sequence position d
+ * to a flat 2D index computed as: flat2d = row * 64 + col
+ * So for sequence position d:
+ *   flat2d = hilbert_indices[d]   <- pre-computed Hilbert curve index
+ *   row    = flat2d / 64          <- which row in the 64x64 image
+ *   col    = flat2d % 64          <- which column in the 64x64 image
+ *
+ * Input layout:  img[c * 64 * 64 + flat2d]  (channel-major: C, H, W)
+ * Output layout: out[d * C_IN + c]           (sequence-major: L, C)
+ *
+ * Parameters:
+ *   p   - model params containing pre-loaded hilbert_indices[4096]
+ *   img - input image of shape (C_IN, 64, 64) flattened row-major
+ *   out - output sequence of shape (SEQ_LEN, C_IN) = (4096, 1)
+ *
+ * Validation: produces exact match with PyTorch reference (MSE = 0.0)
+ * because this is pure index reordering with no floating point math.
+ */
 void hilbert_scan(const ModelParams *p, const float *img, float *out)
 {
     int d, c;
     for (d = 0; d < SEQ_LEN; d++) {
+        /* hilbert_indices[d] gives the flat 2D position (row*64 + col)
+         * for the d-th step along the Hilbert curve.
+         * row = flat2d / 64,  col = flat2d % 64 */
         int flat2d = p->hilbert_indices[d];
         for (c = 0; c < C_IN; c++)
+            /* img is stored channel-major: pixel at (c, row, col)
+             * lives at index c*4096 + flat2d */
             out[d * C_IN + c] = img[c * 64 * 64 + flat2d];
     }
 }
