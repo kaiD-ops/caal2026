@@ -1,12 +1,34 @@
-# Milestone 3: Member 1 - RISC-V Assembly Implementation
+# Milestone 3: RISC-V Scalar Implementation
 
-## Overview
+This directory contains the complete RISC-V 32-bit assembly implementation of the S4D galaxy morphology classifier from Milestone 2.
 
-This directory contains RISC-V assembly implementations of the neural network layers for the S4-based galaxy morphology classifier. Member 1 is responsible for implementing 4 layers in RISC-V assembly with validation.
+## Directory Structure
 
-## Tasks Summary
+```
+milestone3/
+├── README.md                    # This file
+├── Makefile                     # Build system
+├── linker.ld                    # RISC-V linker script for VeeR-iSS
+├── include/
+│   └── nn.h                     # Header with constants and function declarations
+├── src/
+│   ├── main.s                   # Demo/test program entry point
+│   ├── math.s                   # Transcendental functions (exp, sin, cos, tanh, sqrt)
+│   ├── hilbert_scan.s           # Hilbert curve reordering (5 points)
+│   ├── linear_layer.s           # Fully-connected/projection layer (6 points)
+│   ├── s4d_layer.s              # State-space model layer (15 points)
+│   ├── gelu_inplace.s           # GELU activation (3 points)
+│   ├── softmax_inplace.s        # Softmax activation (3 points)
+│   └── take_last_timestep.s     # Sequence extraction (3 points)
+├── tests/
+│   ├── test_hilbert.s           # Test harness for hilbert_scan
+│   ├── test_linear.s            # Test harness for linear_layer
+│   └── validation.py            # Python script for end-to-end validation
+├── build/                       # Compiled objects and binaries (created by make)
+└── bin/                         # Final executables (created by make)
+```
 
-### Assembly Implementations (30 pts total)
+## Assembly Implementations (50 pts total)
 
 | Layer | Difficulty | Points | Status | File |
 |-------|------------|--------|--------|------|
