@@ -44,6 +44,10 @@
 
 .extern expf_fast
 
+.section .rodata
+.align 4
+const_0_0:      .word 0x00000000    # 0.0
+
 .section .text
 .globl s4d_layer
 .type s4d_layer, @function
@@ -76,7 +80,8 @@ s4d_layer:
     
     slli t2, t0, 2              /* t2 = m * 4 */
     add t3, s0, t2              /* t3 = &h_real[m] */
-    fli.s fm0, 0.0              /* fm0 = 0.0 */
+    la t4, const_0_0
+    flw fm0, 0(t4)              /* fm0 = 0.0 */
     fsw fm0, 0(t3)              /* h_real[m] = 0.0 */
     
     addi t4, s0, 128            /* t4 = &h_imag[0] */

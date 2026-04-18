@@ -33,6 +33,13 @@
 
 .extern tanhf_fast
 
+.section .rodata
+.align 4
+const_c2:       .word 0x3d36f08e    # 0.044715
+const_c1:       .word 0x3f4c422f    # ≈ 0.7978845608 (sqrt(2/π))
+const_1_0:      .word 0x3f800000    # 1.0
+const_0_5:      .word 0x3f000000    # 0.5
+
 .section .text
 .globl gelu_inplace
 .type gelu_inplace, @function
@@ -66,14 +73,16 @@ gelu_inplace:
     fmul.s fs1, fs1, fs0        /* fs1 = x³ */
     
     /* Compute c2 * x³ where c2 = 0.044715 */
-    fli.s fs2, 0.044715         /* fs2 = 0.044715 */
+    la t2, const_c2
+    flw fs2, 0(t2)              /* fs2 = 0.044715 */
     fmul.s fs2, fs2, fs1        /* fs2 = 0.044715 * x³ */
     
     /* Compute x + c2*x³ */
     fadd.s fs2, fs0, fs2        /* fs2 = x + 0.044715*x³ */
     
     /* Multiply by c1 = sqrt(2/π) ≈ 0.7978845608 */
-    fli.s fs3, 0.7978846        /* fs3 ≈ sqrt(2/π) */
+    la t2, const_c1
+    flw fs3, 0(t2)              /* fs3 ≈ sqrt(2/π) */
     fmul.s fs2, fs2, fs3        /* fs2 = sqrt(2/π) * (x + 0.044715*x³) */
     
     /* Call tanhf_fast
@@ -82,14 +91,16 @@ gelu_inplace:
     jal ra, tanhf_fast          /* call tanhf_fast, result in fa0 */
     
     /* Compute 1 + tanh(...) */
-    fli.s fs2, 1.0              /* fs2 = 1.0 */
+    la t2, const_1_0
+    flw fs2, 0(t2)              /* fs2 = 1.0 */
     fadd.s fs2, fa0, fs2        /* fs2 = 1 + tanh(...) */
     
     /* Compute x * (1 + tanh(...)) */
     fmul.s fs2, fs0, fs2        /* fs2 = x * (1 + tanh(...)) */
     
     /* Compute 0.5 * x * (1 + tanh(...)) */
-    fli.s fs3, 0.5              /* fs3 = 0.5 */
+    la t2, const_0_5
+    flw fs3, 0(t2)              /* fs3 = 0.5 */
     fmul.s fs2, fs2, fs3        /* fs2 = 0.5 * x * (1 + tanh(...)) */
     
     /* Store result */

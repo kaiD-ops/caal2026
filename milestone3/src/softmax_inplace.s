@@ -33,6 +33,12 @@
 
 .extern expf_fast
 
+.section .rodata
+.align 4
+const_0_0:      .word 0x00000000    # 0.0
+const_1e7:      .word 0x33d6e3f7    # 1e-7
+const_1_0:      .word 0x3f800000    # 1.0
+
 .section .text
 .globl softmax_inplace
 .type softmax_inplace, @function
@@ -75,7 +81,8 @@ softmax_inplace:
 .softmax_max_found:
     /* ========== Phase 2: Compute exp(x[i] - max) and sum ==========
        sum = 0 */
-    fli.s fs2, 0.0              /* fs2 = 0 (sum accumulator) */
+    la t2, const_0_0
+    flw fs2, 0(t2)              /* fs2 = 0.0 (sum accumulator) */
     li t0, 0                    /* loop counter = 0 */
     
 .softmax_exp_sum_loop:
@@ -110,10 +117,12 @@ softmax_inplace:
        for i in 0..n-1: x[i] /= sum */
     
     /* If sum is effectively zero, handle gracefully */
-    fli.s fs0, 1e-7             /* fs0 = small epsilon for safety */
+    la t2, const_1e7
+    flw fs0, 0(t2)              /* fs0 = 1e-7 small epsilon for safety */
     flt.s t2, fs2, fs0           /* t2 = (sum < epsilon) ? 1 : 0 */
     beq t2, zero, .softmax_divide_loop
-    fli.s fs2, 1.0              /* if sum too small, use 1.0 to avoid divide by zero */
+    la t2, const_1_0
+    flw fs2, 0(t2)              /* fs2 = 1.0 if sum too small, use 1.0 to avoid divide by zero */
     
 .softmax_divide_loop:
     li t0, 0                    /* loop counter = 0 */
