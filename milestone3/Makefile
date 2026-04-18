@@ -73,7 +73,7 @@ TARGET = $(BIN_DIR)/s4d_classifier
 # Targets
 # ============================================================================
 
-.PHONY: all clean help disassemble readelf test
+.PHONY: all clean help disassemble readelf test build build-main-only
 
 # Ensure directories exist first
 all: create_dirs $(TARGET)
@@ -114,14 +114,23 @@ $(S4D_OBJ): $(S4D_SRC) | create_dirs
 $(MAIN_OBJ): $(MAIN_SRC) | create_dirs
 	$(AS) $(ASFLAGS) -Iinclude -o $@ $<
 
-# Link all object files
+# Link all object files (normal build)
 $(TARGET): $(ALL_OBJ) | create_dirs
 	$(LD) $(LDFLAGS) -o $@ $(ALL_OBJ)
 	@echo "Linked: $(TARGET)"
 
+# Link ONLY main.o (for minimal testing - no buffers from other modules)
+$(BIN_DIR)/s4d_classifier_main_only: $(MAIN_OBJ) | create_dirs
+	$(LD) $(LDFLAGS) -o $@ $(MAIN_OBJ)
+	@echo "Linked (main-only): $@"
+
 # Alias 'build' to the main target
 build: $(TARGET)
 	@echo "Build complete: $(TARGET)"
+
+# Build minimal version (main-only, no large buffers)
+build-main-only: $(BIN_DIR)/s4d_classifier_main_only
+	@echo "Build complete (main-only): $(BIN_DIR)/s4d_classifier_main_only"
 
 # Generate disassembly
 disassemble: $(TARGET)
