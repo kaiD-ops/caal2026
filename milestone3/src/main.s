@@ -90,12 +90,24 @@ main:
     /* Initialize stack */
     li sp, 0x80800000
     
-    /* Just spin forever - VeeR-iSS will count instructions and report */
-    nop
-    nop
-    nop
-main_loop:
-    j main_loop   /* Simple infinite loop - VeeR counts and reports total */
+    /* Test: Call a simple layer to measure instruction count */
+    /* For now, just test the math library function expf_fast */
+    
+    /* Set up argument: fa0 = 0.5 (test input) */
+    li t0, 0x3f000000      /* 0.5 in IEEE 754 */
+    fmv.w.x fa0, t0
+    
+    /* Call expf_fast multiple times to get measurable count */
+    li t0, 100             /* Loop 100 times */
+    
+test_loop:
+    jal ra, expf_fast      /* Call expf_fast (about 36 instructions) */
+    addi t0, t0, -1
+    bne t0, zero, test_loop
+    
+    /* Done - loop forever for measurement */
+spin:
+    j spin
 
 /* ============================================================================
  * Utility Functions (simplified - VeeR-iSS environment dependent)
