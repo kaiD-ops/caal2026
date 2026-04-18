@@ -16,8 +16,8 @@
 # Configuration
 # ============================================================================
 
-# RISC-V toolchain prefix
-CROSS_COMPILE ?= riscv64-unknown-elf-
+# RISC-V toolchain prefix (riscv32 for VeeR 32-bit)
+CROSS_COMPILE ?= riscv32-unknown-elf-
 
 # Tool commands
 CC  = $(CROSS_COMPILE)gcc
