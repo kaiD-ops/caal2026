@@ -89,25 +89,89 @@ msg_newline:   .asciz "\n"
 main:
     /* Initialize stack */
     li sp, 0x80800000
+    li gp, 0x80000000      /* Initialize global pointer for data access */
     
-    /* Test: Call a simple layer to measure instruction count */
-    /* For now, just test the math library function expf_fast */
+    /* ============================================================================
+     * FORWARD PASS: S4D Galaxy Classifier
+     * ============================================================================
+     */
     
-    /* Set up argument: fa0 = 0.5 (test input) */
-    li t0, 0x3f000000      /* 0.5 in IEEE 754 */
-    fmv.w.x fa0, t0
+    /* Step 1: Hilbert Scan - reorder 64x64 image along Hilbert curve */
+    la a0, model_params           /* ModelParams* */
+    la a1, test_image             /* input image (64x64 = 4096 floats) */
+    la a2, buffer_after_hilbert   /* output (4096 floats) */
+    jal ra, hilbert_scan
     
-    /* Call expf_fast multiple times to get measurable count */
-    li t0, 100             /* Loop 100 times */
+    /* Step 2: Input Projection (U-project) - Linear layer C_IN=1 -> D_MODEL=64 */
+    /* Note: This is a sequence operation, apply to all 4096 sequence positions */
+    la a0, model_params
+    lw a0, 64(a0)                 /* Offset to uproject_weight in ModelParams */
+    lw a1, 68(a0)                 /* uproject_bias */
+    la a2, buffer_after_hilbert   /* input: [4096] */
+    la a3, buffer_after_uproject  /* output: [4096, 64] */
+    li t0, 4096                   /* seq_len */
+    li t1, 1                       /* in_dim */
+    li t2, 64                      /* out_dim (D_MODEL) */
+    jal ra, linear_layer
     
-test_loop:
-    jal ra, expf_fast      /* Call expf_fast (about 36 instructions) */
-    addi t0, t0, -1
-    bne t0, zero, test_loop
+    /* Step 3: S4D Layer 1 */
+    la a0, model_params
+    la a1, buffer_after_uproject  /* input [4096, 64] */
+    la a2, buffer_after_s4d_1     /* output [4096, 64] */
+    jal ra, s4d_layer
     
-    /* Done - loop forever for measurement */
-spin:
-    j spin
+    /* Step 4: GELU activation in-place on Layer 1 output */
+    la a0, buffer_after_s4d_1     /* pointer to data */
+    li a1, 262144                  /* size: 4096 * 64 floats */
+    jal ra, gelu_inplace
+    
+    /* Step 5: S4D Layer 2 */
+    la a0, model_params
+    la a1, buffer_after_s4d_1     /* input [4096, 64] */
+    la a2, buffer_after_s4d_2     /* output [4096, 64] */
+    jal ra, s4d_layer
+    
+    /* Step 6: GELU activation in-place on Layer 2 output */
+    la a0, buffer_after_s4d_2
+    li a1, 262144
+    jal ra, gelu_inplace
+    
+    /* Step 7: Take last timestep - extract final sequence output [64] */
+    la a0, buffer_after_s4d_2       /* input [4096, 64] */
+    la a1, buffer_last_timestep     /* output [64] */
+    li a2, 4096                     /* seq_len */
+    li a3, 64                       /* d_model */
+    jal ra, take_last_timestep
+    
+    /* Step 8: FC Head - Linear layer D_MODEL=64 -> N_CLASSES=4 */
+    la a0, model_params
+    lw a0, 256(a0)                 /* fc_weight offset */
+    lw a1, 512(a0)                 /* fc_bias offset */
+    la a2, buffer_last_timestep    /* input [64] */
+    la a3, buffer_output_logits    /* output [4] */
+    li t0, 64                       /* in_dim */
+    li t1, 4                        /* out_dim (N_CLASSES) */
+    li t2, 1                        /* seq_len (single sample) */
+    jal ra, linear_layer
+    
+    /* Step 9: Softmax - convert logits to probabilities */
+    la a0, buffer_output_logits    /* input/output [4] floats */
+    li a1, 4                        /* size */
+    jal ra, softmax_inplace
+    
+    /* ============================================================================
+     * EXIT CLEANLY
+     * ============================================================================
+     * Use ECALL to invoke the exit() syscall
+     * RISC-V ABI: a0 contains exit code (0 = success)
+     */
+    
+    li a0, 0                        /* exit code: 0 = success */
+    li a7, 93                       /* syscall number for exit() */
+    ecall                           /* invoke syscall - program terminates here */
+    
+    /* This code should never be reached */
+    j .                             /* if ecall fails, spin forever */
 
 /* ============================================================================
  * Utility Functions (simplified - VeeR-iSS environment dependent)
