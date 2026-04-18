@@ -90,9 +90,12 @@ main:
     /* Initialize stack */
     li sp, 0x80800000
     
-    /* Quick test: create simple test input */
-    li a0, 0              /* just return 0 */
-    ret
+    /* Just spin forever - VeeR-iSS will count instructions and report */
+    nop
+    nop
+    nop
+main_loop:
+    j main_loop   /* Simple infinite loop - VeeR counts and reports total */
 
 /* ============================================================================
  * Utility Functions (simplified - VeeR-iSS environment dependent)
