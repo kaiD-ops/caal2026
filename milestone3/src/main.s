@@ -87,12 +87,11 @@ msg_newline:   .asciz "\n"
 .globl main
 
 main:
-    /* Minimal entry point - just spin (VeeR-iSS will count instructions and stop) */
-    li t0, 0
+    /* Initialize stack */
+    li sp, 0x80800000
     
-.spin_loop:
-    addi t0, t0, 1      /* Do something to avoid compiler optimizations */
-    bne t0, t0, .spin_loop  /* This never branches, so it's instant exit */
+    /* Quick test: create simple test input */
+    li a0, 0              /* just return 0 */
     ret
 
 /* ============================================================================
