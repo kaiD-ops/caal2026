@@ -87,13 +87,13 @@ msg_newline:   .asciz "\n"
 .globl main
 
 main:
-    /* Minimal entry point - exits immediately without heavy computation */
-    li a7, 93            /* exit syscall */
-    li a0, 0             /* exit code */
-    ecall
+    /* Minimal entry point - just spin (VeeR-iSS will count instructions and stop) */
+    li t0, 0
     
-    /* Fallback infinite loop if ecall doesn't work */
-    j main
+.spin_loop:
+    addi t0, t0, 1      /* Do something to avoid compiler optimizations */
+    bne t0, t0, .spin_loop  /* This never branches, so it's instant exit */
+    ret
 
 /* ============================================================================
  * Utility Functions (simplified - VeeR-iSS environment dependent)
