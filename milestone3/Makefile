@@ -146,8 +146,8 @@ TEST_HILBERT_BIN = $(BIN_DIR)/test_hilbert
 $(TEST_HILBERT_OBJ): $(TEST_HILBERT_SRC) | create_dirs
 	$(AS) $(ASFLAGS) -Iinclude -o $@ $<
 
-$(TEST_HILBERT_BIN): $(TEST_HILBERT_OBJ) $(HILBERT_OBJ) | create_dirs
-	$(LD) $(LDFLAGS) -o $@ $(TEST_HILBERT_OBJ) $(HILBERT_OBJ)
+$(TEST_HILBERT_BIN): $(TEST_HILBERT_OBJ) | create_dirs
+	$(LD) $(LDFLAGS) -o $@ $(TEST_HILBERT_OBJ)
 	@echo "Linked: $(TEST_HILBERT_BIN)"
 
 build-test-hilbert: $(TEST_HILBERT_BIN)
