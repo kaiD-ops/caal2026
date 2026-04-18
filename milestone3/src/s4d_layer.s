@@ -81,12 +81,12 @@ s4d_layer:
     slli t2, t0, 2              /* t2 = m * 4 */
     add t3, s0, t2              /* t3 = &h_real[m] */
     la t4, const_0_0
-    flw fm0, 0(t4)              /* fm0 = 0.0 */
-    fsw fm0, 0(t3)              /* h_real[m] = 0.0 */
+    flw ft0, 0(t4)              /* ft0 = 0.0 */
+    fsw ft0, 0(t3)              /* h_real[m] = 0.0 */
     
     addi t4, s0, 128            /* t4 = &h_imag[0] */
     add t3, t4, t2              /* t3 = &h_imag[m] */
-    fsw fm0, 0(t3)              /* h_imag[m] = 0.0 */
+    fsw ft0, 0(t3)              /* h_imag[m] = 0.0 */
     
     addi t0, t0, 1
     j .s4d_init_loop
@@ -109,7 +109,7 @@ s4d_layer:
     bge t4, t7, .s4d_next_t
     
     /* Input x_t = in[t*D_MODEL + d] */
-    mul t0, t5, t7              /* t0 = t * D_MODEL */
+    slli t0, t5, 6              /* t0 = t * 64 (D_MODEL = 64, use shift instead of mul) */
     add t0, t0, t4              /* t0 = t*D_MODEL + d */
     slli t0, t0, 2              /* t0 *= 4 (byte offset) */
     add t1, a5, t0              /* t1 = &in[t*D_MODEL + d] */
@@ -130,7 +130,7 @@ s4d_layer:
     */
     
     /* For now, store u_t as output (simplified placeholder) */
-    mul t0, t5, t7              /* t0 = t * D_MODEL */
+    slli t0, t5, 6              /* t0 = t * 64 (use shift instead of mul) */
     add t0, t0, t4              /* t0 = t*D_MODEL + d */
     slli t0, t0, 2              /* t0 *= 4 (byte offset) */
     add t1, a6, t0              /* t1 = &out[t*D_MODEL + d] */
