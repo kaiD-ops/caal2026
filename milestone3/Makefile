@@ -75,7 +75,7 @@ TARGET = $(BIN_DIR)/s4d_classifier
 # Targets
 # ============================================================================
 
-.PHONY: all clean help disassemble readelf test build build-main-only
+.PHONY: all clean help disassemble readelf test build build-main-only build-test-hilbert
 
 # Ensure directories exist first
 all: create_dirs $(TARGET)
@@ -138,7 +138,21 @@ build: $(TARGET)
 build-main-only: $(BIN_DIR)/s4d_classifier_main_only
 	@echo "Build complete (main-only): $(BIN_DIR)/s4d_classifier_main_only"
 
-# Generate disassembly
+# Test target: Build test_hilbert
+TEST_HILBERT_SRC = $(TEST_DIR)/test_hilbert.s
+TEST_HILBERT_OBJ = $(BUILD_DIR)/test_hilbert.o
+TEST_HILBERT_BIN = $(BIN_DIR)/test_hilbert
+
+$(TEST_HILBERT_OBJ): $(TEST_HILBERT_SRC) | create_dirs
+	$(AS) $(ASFLAGS) -Iinclude -o $@ $<
+
+$(TEST_HILBERT_BIN): $(TEST_HILBERT_OBJ) $(HILBERT_OBJ) | create_dirs
+	$(LD) $(LDFLAGS) -o $@ $(TEST_HILBERT_OBJ) $(HILBERT_OBJ)
+	@echo "Linked: $(TEST_HILBERT_BIN)"
+
+build-test-hilbert: $(TEST_HILBERT_BIN)
+	@echo "Build complete: $(TEST_HILBERT_BIN)"
+	@echo "To run: whisper --configfile veer/whisper.json $(TEST_HILBERT_BIN)"
 disassemble: $(TARGET)
 	$(OBJDUMP) -d -S $(TARGET) > $(BUILD_DIR)/disassembly.txt
 	@echo "Disassembly written to $(BUILD_DIR)/disassembly.txt"
