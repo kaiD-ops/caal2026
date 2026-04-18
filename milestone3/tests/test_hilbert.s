@@ -1,32 +1,27 @@
 /* ============================================================================
- * test_hilbert.s - Test Harness for Hilbert Scan Layer (SIMPLE TEST)
+ * test_hilbert.s - Minimal test (no data, no BSS, text-only)
  * ============================================================================
- *
- * This test harness:
- * 1. Does NOT call hilbert_scan yet
- * 2. Just loops a few times to test the framework
- * 3. Spins forever for inspection
- *
- * To run:
- *   make build-test-hilbert
- *   whisper --configfile veer/whisper.json bin/test_hilbert
  */
 
 .section .text
 .globl main
 
 main:
-    /* Initialize stack */
-    lui sp, 0x80800
+    /* No data initialization - pure text section only */
     
-    /* Simple test loop: 100 iterations */
-    addi t0, zero, 100
+    /* Loop 10 times with tight code */
+    addi t0, zero, 10
     
-test_loop:
+loop:
+    addi t1, zero, 1000
+inner:
+    addi t1, t1, -1
+    bne t1, zero, inner
+    
     addi t0, t0, -1
-    bne t0, zero, test_loop
+    bne t0, zero, loop
     
-    /* Done - spin forever */
+    /* Spin forever */
     j spin
 
 spin:
