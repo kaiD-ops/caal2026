@@ -89,15 +89,10 @@ msg_newline:   .asciz "\n"
 main:
     /* Initialize stack */
     li sp, 0x80800000
-    li gp, 0x80000000      /* Initialize global pointer for data access */
     
-    /* ============================================================================
-     * SIMPLE TEST: Just loop - no function calls
-     * ============================================================================
-     * This tests if the issue is with hilbert_scan or the binary setup
-     */
-    
-    li t0, 1000000         /* Loop 1 million times */
+    /* Simple tight loop: 100,000 iterations */
+    lui t0, 0x1              /* t0 = 0x10000 = 65536 */
+    addi t0, t0, 34464       /* t0 = 100000 */
     
 test_loop:
     addi t0, t0, -1
