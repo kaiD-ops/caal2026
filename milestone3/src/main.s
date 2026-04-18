@@ -83,6 +83,10 @@ msg_probs:     .asciz "Probabilities: "
 msg_class:     .asciz "Predicted Class: "
 msg_newline:   .asciz "\n"
 
+/* Loop count for testing */
+loop_count:
+    .word 100
+
 .section .text
 .globl main
 
@@ -90,8 +94,9 @@ main:
     /* Initialize stack */
     li sp, 0x80800000
     
-    /* Simple tight loop: 500 iterations */
-    addi t0, zero, 500         /* t0 = 500 (fits in 12-bit immediate) */
+    /* Load loop count from data section */
+    la t0, loop_count
+    lw t0, 0(t0)
     
 test_loop:
     addi t0, t0, -1
