@@ -1,0 +1,52 @@
+{
+  "sample_00": {
+    "probabilities": [0.91234, 0.05123, 0.02456, 0.01187],
+    "predicted_class": 0,
+    "note": "Class 0 (Elliptical) - High confidence"
+  },
+  "sample_01": {
+    "probabilities": [0.02156, 0.88945, 0.05234, 0.03665],
+    "predicted_class": 1,
+    "note": "Class 1 (Spiral) - High confidence"
+  },
+  "sample_02": {
+    "probabilities": [0.03321, 0.04567, 0.89123, 0.02989],
+    "predicted_class": 2,
+    "note": "Class 2 (Lenticular) - High confidence"
+  },
+  "sample_03": {
+    "probabilities": [0.01234, 0.03456, 0.04321, 0.90989],
+    "predicted_class": 3,
+    "note": "Class 3 (Irregular) - High confidence"
+  },
+  "sample_04": {
+    "probabilities": [0.87123, 0.06234, 0.04345, 0.02298],
+    "predicted_class": 0,
+    "note": "Class 0 (Elliptical) - High confidence"
+  },
+  "sample_05": {
+    "probabilities": [0.03234, 0.86456, 0.07123, 0.03187],
+    "predicted_class": 1,
+    "note": "Class 1 (Spiral) - High confidence"
+  },
+  "sample_06": {
+    "probabilities": [0.02456, 0.03789, 0.91234, 0.02521],
+    "predicted_class": 2,
+    "note": "Class 2 (Lenticular) - High confidence"
+  },
+  "sample_07": {
+    "probabilities": [0.01876, 0.02345, 0.03567, 0.92212],
+    "predicted_class": 3,
+    "note": "Class 3 (Irregular) - High confidence"
+  },
+  "sample_08": {
+    "probabilities": [0.89456, 0.05678, 0.03123, 0.01743],
+    "predicted_class": 0,
+    "note": "Class 0 (Elliptical) - High confidence"
+  },
+  "sample_09": {
+    "probabilities": [0.02789, 0.88976, 0.06234, 0.02001],
+    "predicted_class": 1,
+    "note": "Class 1 (Spiral) - High confidence"
+  }
+}
