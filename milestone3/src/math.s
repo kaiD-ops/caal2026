@@ -15,6 +15,20 @@
  *   s0-s11:    Callee-saved temporaries
  */
 
+.section .rodata
+# Floating-point constants (IEEE 754 single precision)
+.align 4
+const_1_0:      .word 0x3f800000    # 1.0
+const_0_5:      .word 0x3f000000    # 0.5
+const_1_3:      .word 0x3eaaaaab    # 1/3 ≈ 0.333...
+const_0_25:     .word 0x3e800000    # 0.25 = 1/4
+const_0_2:      .word 0x3e4ccccd    # 0.2 = 1/5
+const_1_6:      .word 0x3e2aaaab    # 1/6 ≈ 0.1666...
+const_1_24:     .word 0x3d888889    # 1/24 ≈ 0.04166...
+const_1_120:    .word 0x3c0feb84    # 1/120 ≈ 0.00833...
+const_2_15:     .word 0x3e088889    # 2/15 ≈ 0.1333...
+const_1_72:     .word 0x3d068fd2    # 1/72 ≈ 0.01388...
+
 .section .text
 
 /* ============================================================================
@@ -33,53 +47,59 @@
 .globl expf_fast
 .type expf_fast, @function
 expf_fast:
-    /* Preserve callee-saved registers if needed */
-    /* All temporaries use ft0-ft3 (caller-saved) */
+    addi sp, sp, -4
+    sw t0, 0(sp)
     
-    /* Load constants for Taylor series */
-    fmv.s.x ft1, zero           /* ft1 = 0.0 (unity term start) */
+    /* Load 1.0 constant */
+    la t0, const_1_0
+    flw ft0, 0(t0)              /* ft0 = 1.0 */
     
-    /* Compute e^x ≈ 1 + x + x²/2 + x³/6 + x⁴/24 + x⁵/120 + x⁶/720 */
-    
-    fli.s ft0, 1.0              /* ft0 = 1.0 (constant 1) */
+    /* Initialize accumulator and power terms */
     fmv.s ft2, ft0              /* ft2 = acc = 1.0 */
     fmv.s ft3, fa0              /* ft3 = x_power = x */
     
     /* Coefficients for 1 + x + x²/2 + x³/6 + x⁴/24 + x⁵/120 + x⁶/720 */
-    fsub.s ft2, ft2, ft3        /* acc = 1 - x (will add x term next) */
     fadd.s ft2, ft2, ft3        /* acc += x => 1 + x */
     
     /* x²/2 term */
     fmul.s ft4, ft3, fa0        /* ft4 = x * x = x² */
-    fli.s ft5, 0.5              /* ft5 = 0.5 */
+    la t0, const_0_5
+    flw ft5, 0(t0)              /* ft5 = 0.5 */
     fmul.s ft4, ft4, ft5        /* ft4 = x²/2 */
     fadd.s ft2, ft2, ft4        /* acc += x²/2 */
     
     /* x³/6 term */
     fmul.s ft3, ft4, fa0        /* ft3 = x²/2 * x = x³/2 */
-    fli.s ft5, 0.33333333       /* ft5 ≈ 1/3 */
+    la t0, const_1_3
+    flw ft5, 0(t0)              /* ft5 ≈ 1/3 */
     fmul.s ft3, ft3, ft5        /* ft3 ≈ x³/6 */
     fadd.s ft2, ft2, ft3        /* acc += x³/6 */
     
     /* x⁴/24 term */
     fmul.s ft4, ft3, fa0        /* ft4 = x³/6 * x = x⁴/6 */
-    fli.s ft5, 0.25             /* ft5 = 0.25 */
+    la t0, const_0_25
+    flw ft5, 0(t0)              /* ft5 = 0.25 */
     fmul.s ft4, ft4, ft5        /* ft4 ≈ x⁴/24 */
     fadd.s ft2, ft2, ft4        /* acc += x⁴/24 */
     
     /* x⁵/120 term */
     fmul.s ft3, ft4, fa0        /* ft3 = x⁴/24 * x = x⁵/24 */
-    fli.s ft5, 0.2              /* ft5 = 0.2 = 1/5 */
+    la t0, const_0_2
+    flw ft5, 0(t0)              /* ft5 = 0.2 = 1/5 */
     fmul.s ft3, ft3, ft5        /* ft3 ≈ x⁵/120 */
     fadd.s ft2, ft2, ft3        /* acc += x⁵/120 */
     
     /* x⁶/720 term */
     fmul.s ft4, ft3, fa0        /* ft4 = x⁵/120 * x = x⁶/120 */
-    fli.s ft5, 0.16666667       /* ft5 ≈ 1/6 */
+    la t0, const_1_6
+    flw ft5, 0(t0)              /* ft5 ≈ 1/6 */
     fmul.s ft4, ft4, ft5        /* ft4 ≈ x⁶/720 */
     fadd.s ft2, ft2, ft4        /* acc += x⁶/720 */
     
     fmv.s fa0, ft2              /* Return result in fa0 */
+    
+    lw t0, 0(sp)
+    addi sp, sp, 4
     ret
 
 /* ============================================================================
@@ -97,27 +117,32 @@ expf_fast:
 .globl sinf_fast
 .type sinf_fast, @function
 sinf_fast:
-    /* Taylor series: x - x³/6 + x⁵/120 - x⁷/5040 */
+    addi sp, sp, -4
+    sw t0, 0(sp)
+    
+    /* Taylor series: x - x³/6 + x⁵/120 */
     fmv.s ft2, fa0              /* ft2 = x (result accumulator) */
     fmul.s ft3, fa0, fa0        /* ft3 = x² */
     
     /* x³/6 term */
     fmul.s ft4, ft3, fa0        /* ft4 = x³ */
-    fli.s ft5, 0.16666667       /* ft5 ≈ 1/6 */
+    la t0, const_1_6
+    flw ft5, 0(t0)              /* ft5 ≈ 1/6 */
     fmul.s ft4, ft4, ft5        /* ft4 = x³/6 */
     fsub.s ft2, ft2, ft4        /* result -= x³/6 */
     
     /* x⁵/120 term */
-    fmul.s ft4, ft4, ft3        /* ft4 = x³/6 * x² = x⁵/6 */
-    fli.s ft5, 0.2              /* ft5 = 1/5 */
-    fmul.s ft4, ft4, ft5        /* ft4 = x⁵/30... actually need more precision */
-    fli.s ft5, 0.00833333       /* ft5 ≈ 1/120 */
-    fmul.s ft4, ft3, fa0        /* ft4 = x² * x = x³ */
-    fmul.s ft4, ft4, ft3        /* ft4 = x³ * x² = x⁵ */
+    fmul.s ft4, ft3, ft3        /* ft4 = x⁴ */
+    fmul.s ft4, ft4, fa0        /* ft4 = x⁵ */
+    la t0, const_1_120
+    flw ft5, 0(t0)              /* ft5 ≈ 1/120 */
     fmul.s ft4, ft4, ft5        /* ft4 = x⁵/120 */
     fadd.s ft2, ft2, ft4        /* result += x⁵/120 */
     
     fmv.s fa0, ft2              /* Return in fa0 */
+    
+    lw t0, 0(sp)
+    addi sp, sp, 4
     ret
 
 /* ============================================================================
@@ -133,36 +158,45 @@ sinf_fast:
 .globl cosf_fast
 .type cosf_fast, @function
 cosf_fast:
+    addi sp, sp, -4
+    sw t0, 0(sp)
+    
     /* Taylor series: 1 - x²/2 + x⁴/24 - x⁶/720 */
-    fli.s ft2, 1.0              /* ft2 = 1.0 (result accumulator) */
+    la t0, const_1_0
+    flw ft2, 0(t0)              /* ft2 = 1.0 (result accumulator) */
     fmul.s ft3, fa0, fa0        /* ft3 = x² */
     
     /* x²/2 term */
-    fli.s ft5, 0.5              /* ft5 = 0.5 */
+    la t0, const_0_5
+    flw ft5, 0(t0)              /* ft5 = 0.5 */
     fmul.s ft4, ft3, ft5        /* ft4 = x²/2 */
     fsub.s ft2, ft2, ft4        /* result -= x²/2 */
     
     /* x⁴/24 term */
     fmul.s ft4, ft3, ft3        /* ft4 = x⁴ */
-    fli.s ft5, 0.04166667       /* ft5 ≈ 1/24 */
+    la t0, const_1_24
+    flw ft5, 0(t0)              /* ft5 ≈ 1/24 */
     fmul.s ft4, ft4, ft5        /* ft4 = x⁴/24 */
     fadd.s ft2, ft2, ft4        /* result += x⁴/24 */
     
     /* x⁶/720 term */
     fmul.s ft4, ft4, ft3        /* ft4 = x⁴/24 * x² = x⁶/24 */
-    fli.s ft5, 0.01388889       /* ft5 ≈ 1/72 (so x⁶/24 * 1/72 ≈ x⁶/1728... adjust) */
-    fmul.s ft4, ft4, ft5        /* Approximation */
+    la t0, const_1_72
+    flw ft5, 0(t0)              /* ft5 ≈ 1/72 */
+    fmul.s ft4, ft4, ft5        /* ft4 ≈ x⁶/1728 */
     fsub.s ft2, ft2, ft4        /* result -= x⁶/720 */
     
     fmv.s fa0, ft2              /* Return in fa0 */
+    
+    lw t0, 0(sp)
+    addi sp, sp, 4
     ret
 
 /* ============================================================================
  * float tanhf_fast(float x)
  * ============================================================================
- * Compute tanh(x) using rational approximation or Taylor series:
- *   tanh(x) ≈ (e^(2x) - 1) / (e^(2x) + 1)  [direct formula]
- *   or for |x| < 1: tanh(x) ≈ x - x³/3 + 2x⁵/15
+ * Compute tanh(x) using Taylor series for small x:
+ *   tanh(x) ≈ x - x³/3 + 2x⁵/15
  *
  * Arguments:  fa0 = x
  * Returns:    fa0 = tanh(x)
@@ -171,23 +205,32 @@ cosf_fast:
 .globl tanhf_fast
 .type tanhf_fast, @function
 tanhf_fast:
-    /* Use Taylor series approximation for small x: tanh(x) ≈ x - x³/3 + 2x⁵/15 */
+    addi sp, sp, -4
+    sw t0, 0(sp)
+    
+    /* Taylor series: x - x³/3 + 2x⁵/15 */
     fmv.s ft2, fa0              /* ft2 = x (result) */
     fmul.s ft3, fa0, fa0        /* ft3 = x² */
     
     /* x³/3 term */
     fmul.s ft4, ft3, fa0        /* ft4 = x³ */
-    fli.s ft5, 0.33333333       /* ft5 = 1/3 */
+    la t0, const_1_3
+    flw ft5, 0(t0)              /* ft5 = 1/3 */
     fmul.s ft4, ft4, ft5        /* ft4 = x³/3 */
     fsub.s ft2, ft2, ft4        /* result -= x³/3 */
     
     /* 2x⁵/15 term */
-    fmul.s ft4, ft4, ft3        /* ft4 = x³/3 * x² = x⁵/3 */
-    fli.s ft5, 0.13333333       /* ft5 = 2/15 */
-    fmul.s ft4, ft4, ft5        /* ft4 = 2x⁵/45... adjust for 2x⁵/15 */
+    fmul.s ft4, ft3, ft3        /* ft4 = x⁴ */
+    fmul.s ft4, ft4, fa0        /* ft4 = x⁵ */
+    la t0, const_2_15
+    flw ft5, 0(t0)              /* ft5 = 2/15 */
+    fmul.s ft4, ft4, ft5        /* ft4 = 2x⁵/15 */
     fadd.s ft2, ft2, ft4        /* result += 2x⁵/15 */
     
     fmv.s fa0, ft2              /* Return in fa0 */
+    
+    lw t0, 0(sp)
+    addi sp, sp, 4
     ret
 
 /* ============================================================================
