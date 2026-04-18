@@ -87,48 +87,13 @@ msg_newline:   .asciz "\n"
 .globl main
 
 main:
-    /* Entry point */
-    la sp, 0x80001000           /* Initialize stack pointer */
-    
-    /* Print startup message */
-    la a0, msg_start
-    jal ra, simple_puts          /* (Placeholder: would use syscall or similar) */
-    
-    /* Load model weights (placeholder - in real code would use fopen/read) */
-    la a0, model_params
-    /* jal ra, load_weights       /* Load from binary file (TODO) */
-    
-    /* Load test image (placeholder - would read from file) */
-    la a0, test_image
-    /* jal ra, load_test_image    /* Load from file (TODO) */
-    
-    /* ========== Forward Pass ==========
-       1. Hilbert Scan: (1, 64, 64) -> (4096, 1) */
-    la a0, model_params
-    la a1, test_image
-    la a2, buffer_after_hilbert
-    jal ra, hilbert_scan
-    
-    /* 2. Input Projection (U-project): (4096, 1) -> (4096, 64) */
-    la a0, model_params  /* weights */
-    li a1, 0             /* offset to uproject weights in ModelParams */
-    /* Load uproject weights and bias, call linear_layer */
-    /* ... (implementation would add pointer arithmetic here) */
-    
-    /* Continue with S4D layers, GELU, and FC head */
-    
-    /* For now, output placeholder results */
-    la a0, msg_class
-    jal ra, simple_puts
-    li a0, 0             /* Example: class 0 */
-    jal ra, simple_puti
-    la a0, msg_newline
-    jal ra, simple_puts
-    
-    /* Exit program */
+    /* Minimal entry point - exits immediately without heavy computation */
     li a7, 93            /* exit syscall */
     li a0, 0             /* exit code */
     ecall
+    
+    /* Fallback infinite loop if ecall doesn't work */
+    j main
 
 /* ============================================================================
  * Utility Functions (simplified - VeeR-iSS environment dependent)
