@@ -1,29 +1,29 @@
 /* ============================================================================
- * main.s - Test Hilbert Scan Layer
+ * main.s - Test Hilbert Scan with Small Data
  * ============================================================================
  */
 
 #include "nn.h"
 
-.extern hilbert_scan
+.extern hilbert_scan_test
 
-/* Test data - small to avoid initialization overhead */
+/* Test data */
 .section .bss
 
-/* Small test image: 10 pixels */
+/* 10 hilbert indices */
+.align 4
+test_indices:
+    .space 40        /* 10 * 4 bytes */
+
+/* 10-pixel input image */
 .align 4
 test_img:
     .space 40        /* 10 * 4 bytes */
 
-/* Small output: 10 pixels */
+/* 10-pixel output */
 .align 4
 test_out:
-    .space 40
-
-/* Minimal ModelParams (just the indices part) */
-.align 4
-test_params:
-    .space 100       /* small structure */
+    .space 40        /* 10 * 4 bytes */
 
 .section .text
 .globl main
@@ -32,14 +32,16 @@ main:
     /* Initialize stack */
     lui sp, 0x80800
     
-    /* Call hilbert_scan(test_params, test_img, test_out) */
-    la a0, test_params
-    la a1, test_img
-    la a2, test_out
-    jal ra, hilbert_scan
+    /* Initialize test data in registers (quick setup) */
+    la a0, test_indices          /* indices array */
+    la a1, test_img              /* input image */
+    la a2, test_out              /* output */
+    li a3, 10                    /* num_pixels = 10 */
     
-    /* If we reach here, hilbert_scan completed */
-    /* Spin forever */
+    /* Call hilbert_scan_test(indices, img, out, 10) */
+    jal ra, hilbert_scan_test
+    
+    /* If we reach here, test completed */
     j spin
 
 spin:
