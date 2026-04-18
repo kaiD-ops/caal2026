@@ -92,27 +92,18 @@ main:
     li gp, 0x80000000      /* Initialize global pointer for data access */
     
     /* ============================================================================
-     * TEST: Hilbert Scan Layer
+     * SIMPLE TEST: Just loop - no function calls
      * ============================================================================
-     * Call hilbert_scan() to test forward pass execution
+     * This tests if the issue is with hilbert_scan or the binary setup
      */
     
-    la a0, model_params           /* ModelParams* */
-    la a1, test_image             /* input image */
-    la a2, buffer_after_hilbert   /* output buffer */
-    jal ra, hilbert_scan
+    li t0, 1000000         /* Loop 1 million times */
     
-    /* If we reach here, hilbert_scan completed successfully */
-    /* Now loop for instruction counting */
-    
-    li t0, 100                    /* Loop 100 times to get measurable count */
-    
-measurement_loop:
-    /* Light work loop - no expensive operations */
+test_loop:
     addi t0, t0, -1
-    bne t0, zero, measurement_loop
+    bne t0, zero, test_loop
     
-    /* Measurement complete - spin forever for clean detection */
+    /* Done - spin forever */
     j spin
 
 spin:
