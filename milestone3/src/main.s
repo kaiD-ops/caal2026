@@ -1,61 +1,58 @@
 /* ============================================================================
- * main.s - RISC-V S4D Galaxy Classifier Demo (Simplified)
+ * main.s - Test Hilbert Scan Layer
  * ============================================================================
  */
 
 #include "nn.h"
 
-/* External function declarations */
 .extern hilbert_scan
 
-/* Minimal data section */
-.section .data
+/* Test data - small to avoid initialization overhead */
+.section .bss
 
-/* Loop count for testing */
+/* Small test image: 10 pixels */
 .align 4
-loop_count:
-    .word 100
+test_img:
+    .space 40        /* 10 * 4 bytes */
+
+/* Small output: 10 pixels */
+.align 4
+test_out:
+    .space 40
+
+/* Minimal ModelParams (just the indices part) */
+.align 4
+test_params:
+    .space 100       /* small structure */
 
 .section .text
 .globl main
 
 main:
     /* Initialize stack */
-    li sp, 0x80800000
+    lui sp, 0x80800
     
-    /* Load loop count from data section */
-    la t0, loop_count
-    lw t0, 0(t0)
+    /* Call hilbert_scan(test_params, test_img, test_out) */
+    la a0, test_params
+    la a1, test_img
+    la a2, test_out
+    jal ra, hilbert_scan
     
-test_loop:
-    addi t0, t0, -1
-    bne t0, zero, test_loop
-    
-    /* Done - spin forever */
+    /* If we reach here, hilbert_scan completed */
+    /* Spin forever */
     j spin
 
 spin:
     j spin
 
-/* ============================================================================
- * Utility Functions (simplified - VeeR-iSS environment dependent)
- * ============================================================================
- */
-
 .globl simple_puts
 simple_puts:
-    /* Print null-terminated string in a0 */
-    /* Placeholder - actual implementation depends on VeeR-iSS setup */
     ret
 
 .globl simple_puti
 simple_puti:
-    /* Print integer in a0 */
-    /* Placeholder - actual implementation depends on VeeR-iSS setup */
     ret
 
 .globl simple_putf
 simple_putf:
-    /* Print float in fa0 */
-    /* Placeholder - actual implementation depends on VeeR-iSS setup */
     ret
