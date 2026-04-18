@@ -90,9 +90,8 @@ main:
     /* Initialize stack */
     li sp, 0x80800000
     
-    /* Simple tight loop: 100,000 iterations */
-    lui t0, 0x1              /* t0 = 0x10000 = 65536 */
-    addi t0, t0, 34464       /* t0 = 100000 */
+    /* Simple tight loop: 10,000 iterations */
+    addi t0, zero, 10000       /* t0 = 10000 (fits in 12-bit immediate) */
     
 test_loop:
     addi t0, t0, -1
