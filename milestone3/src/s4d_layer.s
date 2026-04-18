@@ -103,10 +103,10 @@ s4d_layer:
     /* ========== For this timestep, process each dimension ==========
        for d in 0..D_MODEL-1: */
     li t4, 0                    /* d = 0 (dimension counter) */
-    li t7, 64                   /* D_MODEL = 64 */
+    li t3, 64                   /* D_MODEL = 64 */
     
 .s4d_d_loop:
-    bge t4, t7, .s4d_next_t
+    bge t4, t3, .s4d_next_t
     
     /* Input x_t = in[t*D_MODEL + d] */
     slli t0, t5, 6              /* t0 = t * 64 (D_MODEL = 64, use shift instead of mul) */
