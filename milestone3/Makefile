@@ -43,6 +43,7 @@ LDFLAGS  = -T linker.ld -Map $(BUILD_DIR)/program.map
 # Source files
 MATH_SRC       = $(SRC_DIR)/math.s
 HILBERT_SRC    = $(SRC_DIR)/hilbert_scan.s
+HILBERT_TEST_SRC = $(SRC_DIR)/hilbert_scan_test.s
 LINEAR_SRC     = $(SRC_DIR)/linear_layer.s
 TAKELT_SRC     = $(SRC_DIR)/take_last_timestep.s
 SOFTMAX_SRC    = $(SRC_DIR)/softmax_inplace.s
@@ -50,12 +51,13 @@ GELU_SRC       = $(SRC_DIR)/gelu_inplace.s
 S4D_SRC        = $(SRC_DIR)/s4d_layer.s
 MAIN_SRC       = $(SRC_DIR)/main.s
 
-ALL_SRC = $(MATH_SRC) $(HILBERT_SRC) $(LINEAR_SRC) $(TAKELT_SRC) \
+ALL_SRC = $(MATH_SRC) $(HILBERT_SRC) $(HILBERT_TEST_SRC) $(LINEAR_SRC) $(TAKELT_SRC) \
           $(SOFTMAX_SRC) $(GELU_SRC) $(S4D_SRC) $(MAIN_SRC)
 
 # Object files
 MATH_OBJ       = $(BUILD_DIR)/math.o
 HILBERT_OBJ    = $(BUILD_DIR)/hilbert_scan.o
+HILBERT_TEST_OBJ = $(BUILD_DIR)/hilbert_scan_test.o
 LINEAR_OBJ     = $(BUILD_DIR)/linear_layer.o
 TAKELT_OBJ     = $(BUILD_DIR)/take_last_timestep.o
 SOFTMAX_OBJ    = $(BUILD_DIR)/softmax_inplace.o
@@ -63,7 +65,7 @@ GELU_OBJ       = $(BUILD_DIR)/gelu_inplace.o
 S4D_OBJ        = $(BUILD_DIR)/s4d_layer.o
 MAIN_OBJ       = $(BUILD_DIR)/main.o
 
-ALL_OBJ = $(MATH_OBJ) $(HILBERT_OBJ) $(LINEAR_OBJ) $(TAKELT_OBJ) \
+ALL_OBJ = $(MATH_OBJ) $(HILBERT_OBJ) $(HILBERT_TEST_OBJ) $(LINEAR_OBJ) $(TAKELT_OBJ) \
           $(SOFTMAX_OBJ) $(GELU_OBJ) $(S4D_OBJ) $(MAIN_OBJ)
 
 # Output executable
@@ -88,6 +90,10 @@ $(MATH_OBJ): $(MATH_SRC) | create_dirs
 
 # Assemble hilbert_scan.s
 $(HILBERT_OBJ): $(HILBERT_SRC) | create_dirs
+	$(AS) $(ASFLAGS) -Iinclude -o $@ $<
+
+# Assemble hilbert_scan_test.s
+$(HILBERT_TEST_OBJ): $(HILBERT_TEST_SRC) | create_dirs
 	$(AS) $(ASFLAGS) -Iinclude -o $@ $<
 
 # Assemble linear_layer.s
