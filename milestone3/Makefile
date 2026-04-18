@@ -73,55 +73,55 @@ TARGET = $(BIN_DIR)/s4d_classifier
 # Targets
 # ============================================================================
 
-.PHONY: all build clean help
-.PHONY: disassemble readelf test
+.PHONY: all clean help disassemble readelf test
 
-all: build
+# Ensure directories exist first
+all: create_dirs $(TARGET)
 
 # Create build directories
-$(BUILD_DIR) $(BIN_DIR) $(TEST_DIR):
-	@mkdir -p $@
+create_dirs:
+	@mkdir -p $(BUILD_DIR) $(BIN_DIR) $(TEST_DIR)
 
 # Assemble math.s
-$(MATH_OBJ): $(MATH_SRC) | $(BUILD_DIR)
-	$(AS) $(ASFLAGS) -I$(INCLUDE_DIR) -o $@ $<
+$(MATH_OBJ): $(MATH_SRC) | create_dirs
+	$(AS) $(ASFLAGS) -Iinclude -o $@ $<
 
 # Assemble hilbert_scan.s
-$(HILBERT_OBJ): $(HILBERT_SRC) | $(BUILD_DIR)
-	$(AS) $(ASFLAGS) -I$(INCLUDE_DIR) -o $@ $<
+$(HILBERT_OBJ): $(HILBERT_SRC) | create_dirs
+	$(AS) $(ASFLAGS) -Iinclude -o $@ $<
 
 # Assemble linear_layer.s
-$(LINEAR_OBJ): $(LINEAR_SRC) | $(BUILD_DIR)
-	$(AS) $(ASFLAGS) -I$(INCLUDE_DIR) -o $@ $<
+$(LINEAR_OBJ): $(LINEAR_SRC) | create_dirs
+	$(AS) $(ASFLAGS) -Iinclude -o $@ $<
 
 # Assemble take_last_timestep.s
-$(TAKELT_OBJ): $(TAKELT_SRC) | $(BUILD_DIR)
-	$(AS) $(ASFLAGS) -I$(INCLUDE_DIR) -o $@ $<
+$(TAKELT_OBJ): $(TAKELT_SRC) | create_dirs
+	$(AS) $(ASFLAGS) -Iinclude -o $@ $<
 
 # Assemble softmax_inplace.s
-$(SOFTMAX_OBJ): $(SOFTMAX_SRC) | $(BUILD_DIR)
-	$(AS) $(ASFLAGS) -I$(INCLUDE_DIR) -o $@ $<
+$(SOFTMAX_OBJ): $(SOFTMAX_SRC) | create_dirs
+	$(AS) $(ASFLAGS) -Iinclude -o $@ $<
 
 # Assemble gelu_inplace.s
-$(GELU_OBJ): $(GELU_SRC) | $(BUILD_DIR)
-	$(AS) $(ASFLAGS) -I$(INCLUDE_DIR) -o $@ $<
+$(GELU_OBJ): $(GELU_SRC) | create_dirs
+	$(AS) $(ASFLAGS) -Iinclude -o $@ $<
 
 # Assemble s4d_layer.s
-$(S4D_OBJ): $(S4D_SRC) | $(BUILD_DIR)
-	$(AS) $(ASFLAGS) -I$(INCLUDE_DIR) -o $@ $<
+$(S4D_OBJ): $(S4D_SRC) | create_dirs
+	$(AS) $(ASFLAGS) -Iinclude -o $@ $<
 
 # Assemble main.s
-$(MAIN_OBJ): $(MAIN_SRC) | $(BUILD_DIR)
-	$(AS) $(ASFLAGS) -I$(INCLUDE_DIR) -o $@ $<
+$(MAIN_OBJ): $(MAIN_SRC) | create_dirs
+	$(AS) $(ASFLAGS) -Iinclude -o $@ $<
 
 # Link all object files
-$(TARGET): $(ALL_OBJ) | $(BIN_DIR)
+$(TARGET): $(ALL_OBJ) | create_dirs
 	$(LD) $(LDFLAGS) -o $@ $(ALL_OBJ)
 	@echo "Linked: $(TARGET)"
 
-# Main build target
+# Alias 'build' to the main target
 build: $(TARGET)
-	@echo "Build complete!"
+	@echo "Build complete: $(TARGET)"
 
 # Generate disassembly
 disassemble: $(TARGET)
