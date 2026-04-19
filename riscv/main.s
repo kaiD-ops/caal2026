@@ -222,6 +222,76 @@ _start:
     lui     t0, %hi(output_pred)
     sw      t2, %lo(output_pred)(t0)
 
+
+    # Write probabilities as ASCII hex to consoleio (0xd0580004)
+    lui     s0, %hi(buf_logits)
+    addi    s0, s0, %lo(buf_logits)
+    lui     s1, 0xd0580
+    addi    s1, s1, 4
+
+    lw      s2, 0(s0)
+    li      s3, 28
+mhex0: bltz s3, mhex0d
+    srl t0, s2, s3
+    andi t0, t0, 0xF
+    li t1, 10
+    blt t0, t1, mh0d
+    addi t0, t0, 87
+    j mh0s
+mh0d: addi t0, t0, 48
+mh0s: sb t0, 0(s1)
+    addi s3, s3, -4
+    j mhex0
+mhex0d: li t0, 32
+    sb t0, 0(s1)
+
+    lw      s2, 4(s0)
+    li      s3, 28
+mhex1: bltz s3, mhex1d
+    srl t0, s2, s3
+    andi t0, t0, 0xF
+    li t1, 10
+    blt t0, t1, mh1d
+    addi t0, t0, 87
+    j mh1s
+mh1d: addi t0, t0, 48
+mh1s: sb t0, 0(s1)
+    addi s3, s3, -4
+    j mhex1
+mhex1d: li t0, 32
+    sb t0, 0(s1)
+
+    lw      s2, 8(s0)
+    li      s3, 28
+mhex2: bltz s3, mhex2d
+    srl t0, s2, s3
+    andi t0, t0, 0xF
+    li t1, 10
+    blt t0, t1, mh2d
+    addi t0, t0, 87
+    j mh2s
+mh2d: addi t0, t0, 48
+mh2s: sb t0, 0(s1)
+    addi s3, s3, -4
+    j mhex2
+mhex2d: li t0, 32
+    sb t0, 0(s1)
+
+    lw      s2, 12(s0)
+    li      s3, 28
+mhex3: bltz s3, mhex3d
+    srl t0, s2, s3
+    andi t0, t0, 0xF
+    li t1, 10
+    blt t0, t1, mh3d
+    addi t0, t0, 87
+    j mh3s
+mh3d: addi t0, t0, 48
+mh3s: sb t0, 0(s1)
+    addi s3, s3, -4
+    j mhex3
+mhex3d: li t0, 10
+    sb t0, 0(s1)
 _finish:
     lui     x3, 0xd0580
     addi    x3, x3, 0

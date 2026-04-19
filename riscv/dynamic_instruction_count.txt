@@ -1,0 +1,31 @@
+=== Dynamic Instruction Count Analysis (500M instruction sample) ===
+Simulator: VeeR-iSS (whisper) v1.713
+Speed: 6.2M instructions/sec
+Sample: first 500M instructions of full inference pass
+
+Family breakdown (500M sample):
+  R-type:  311,600,923  (62.3%)  -- add, sub, mul, sll dominates (address arithmetic)
+  F-type:  112,194,693  (22.4%)  -- fmadd.s, fmul.s, flw (S4D floating point)
+  B-type:   34,925,895   (7.0%)  -- loop branches
+  J-type:   34,626,621   (6.9%)  -- function calls (jal)
+  S-type:    1,348,492   (0.3%)  -- stores (fsw)
+  U-type:    5,280,951   (1.1%)  -- address loading (lui)
+  I-type:       22,425   (0.0%)  -- immediate ops
+
+Estimated total instructions: ~5.5 billion
+Estimated full simulation time: ~14.8 minutes at 6.2M inst/sec
+
+Top instructions by count:
+  add:     105,685,919 (21.1%)
+  flw:      72,079,004 (14.4%)
+  addi:     70,363,038 (14.1%)
+  slli:     67,921,525 (13.6%)
+  jal:      34,626,621  (6.9%)
+  fmadd.s:  34,324,943  (6.9%)
+  mul:      33,831,854  (6.8%)
+  sub:      33,798,587  (6.8%)
+  blt:      33,552,820  (6.7%)
+
+Note: Sample covers init_params + hilbert_scan + linear_layer + 
+      beginning of s4d_layer_1 precompute phase.
+      S4D causal convolution (O(L^2)) dominates the remaining ~5B instructions.

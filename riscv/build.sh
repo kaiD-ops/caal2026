@@ -119,7 +119,7 @@ execute() {
     fi
 
     echo "[*] Executing with whisper..."
-    whisper -x "$hex_file" -s 0x80000000 --tohost 0xd0580000 -f "$log_file" --configfile "$WHISPER_CFG"
+    whisper -x "$hex_file" -s 0x80000000 --tohost 0xd0580000 --profileinst build/galaxy_prof.log --configfile "$WHISPER_CFG"
     echo "[+] Execution log saved to $log_file"
 }
 

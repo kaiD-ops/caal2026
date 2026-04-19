@@ -177,38 +177,37 @@ sin_reduced:
 # --------------------------------------------------------------------------
 .global tanhf
 tanhf:
-    addi    sp, sp, -8
-    fsw     fa0, 0(sp)                  # save x
-
-    # saturation check
+    addi    sp, sp, -12
+    sw      ra, 0(sp)
+    fsw     fs1, 4(sp)
+    fsw     fs2, 8(sp)
+    fmv.s   fs2, fa0
     fabs.s  ft0, fa0
     lui     t0, %hi(tanh_sat)
     flw     ft1, %lo(tanh_sat)(t0)
-    flt.s   t1, ft0, ft1               # |x| < 4?
+    flt.s   t1, ft0, ft1
     beqz    t1, tanh_sat_case
-
-    # compute e^(2x)
     lui     t0, %hi(math_two)
-    flw     ft1, %lo(math_two)(t0)
-    fmul.s  fa0, fa0, ft1              # 2x
-    call    expf                       # fa0 = e^(2x)
-
+    flw     ft0, %lo(math_two)(t0)
+    fmul.s  fa0, fs2, ft0
+    call    expf
+    fmv.s   fs1, fa0
     lui     t0, %hi(math_one)
-    flw     ft1, %lo(math_one)(t0)
-    fsub.s  ft2, fa0, ft1              # e^2x - 1
-    fadd.s  ft3, fa0, ft1              # e^2x + 1
-    fdiv.s  fa0, ft2, ft3
-    addi    sp, sp, 8
-    ret
-
+    flw     ft0, %lo(math_one)(t0)
+    fsub.s  fa0, fs1, ft0
+    fadd.s  ft1, fs1, ft0
+    fdiv.s  fa0, fa0, ft1
+    j       tanh_done
 tanh_sat_case:
-    flw     fa1, 0(sp)                 # reload original x for sign
     lui     t0, %hi(math_one)
     flw     fa0, %lo(math_one)(t0)
-    fsgnj.s fa0, fa0, fa1              # sign(x) * 1.0
-    addi    sp, sp, 8
+    fsgnj.s fa0, fa0, fs2
+tanh_done:
+    flw     fs2, 8(sp)
+    flw     fs1, 4(sp)
+    lw      ra, 0(sp)
+    addi    sp, sp, 12
     ret
-
 # =============================================================================
 # Constants
 # =============================================================================
