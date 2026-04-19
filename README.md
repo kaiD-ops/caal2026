@@ -163,3 +163,38 @@ Key packages:
 **References:**
 - Gu et al. (2022) - "Efficiently Modeling Long Sequences with Structured State Spaces" (ICLR)
 - Gu et al. (2022) - "On the Parameterization and Initialization of Diagonal State Space Models" (NeurIPS)
+
+## Milestone 3: RISC-V Assembly Implementation
+
+### Build
+```bash
+cd riscv
+riscv32-unknown-elf-gcc -march=rv32imf -mabi=ilp32f -nostdlib -c main.s -o build/main.o
+riscv32-unknown-elf-gcc -march=rv32imf -mabi=ilp32f -nostdlib -c layers.s -o build/layers.o
+riscv32-unknown-elf-gcc -march=rv32imf -mabi=ilp32f -nostdlib -c math.s -o build/math.o
+riscv32-unknown-elf-ld -T veer/link.ld -m elf32lriscv -o build/galaxy.elf build/main.o build/layers.o build/math.o
+riscv32-unknown-elf-objcopy -O verilog build/galaxy.elf build/galaxy.hex
+```
+
+### Run on VeeR-iSS
+```bash
+whisper --configfile veer/whisper.json --tohost 0xd0580000 --consoleio 0xd0580004 -s 0x80000000 --profileinst build/galaxy_prof.log --consoleoutfile build/galaxy_probs.txt -x build/galaxy.hex
+```
+
+### Validate
+```bash
+python3 validate_riscv.py
+```
+
+### Files
+- `math.s` — expf, cosf, sinf, tanhf
+- `hilbert.s` — Hilbert scan
+- `linear.s` — Linear layer
+- `s4d.s` — S4D state-space layer
+- `gelu.s` — GELU activation
+- `softmax.s` — Softmax
+- `take_last.s` — TakeLastTimestep
+- `layers.s` — Combined layers (used by main.s)
+- `main.s` — Full 9-stage forward pass
+- `validate_riscv.py` — Validation script
+- `tests/` — Per-layer test harnesses
