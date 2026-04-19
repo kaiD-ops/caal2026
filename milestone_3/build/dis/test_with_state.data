@@ -1,8 +1,0 @@
-
-build/exe/test_with_state.exe:     file format elf32-littleriscv
-
-Contents of section .data:
- f0040000 cdccccbd cdcc4cbe 9a9999be cdccccbe  ......L.........
- f0040010 0000003f 9a99193f 3333333f cdcc4c3f  ...?...?333?..L?
- f0040020 0000803f 0000803f 0000803f 0000803f  ...?...?...?...?
- f0040030 00000000 00000000 00000000 00000000  ................

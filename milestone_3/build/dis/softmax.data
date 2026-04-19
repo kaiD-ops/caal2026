@@ -1,5 +1,0 @@
-
-build/exe/softmax.exe:     file format elf32-littleriscv
-
-Contents of section .data:
- f0040000 0000803f 00000040 00004040 00008040  ...?...@..@@...@
