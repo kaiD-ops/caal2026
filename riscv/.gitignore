@@ -1,0 +1,12 @@
+build/*.elf
+build/*.o
+build/*.log
+build/*.hex
+build/asm/
+build/dis/
+build/exe/
+build/hex/
+build/obj/
+build/logs/
+*.pyc
+__pycache__/
