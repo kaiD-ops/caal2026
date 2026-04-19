@@ -1,0 +1,3 @@
+
+build/exe/minimal_test.exe:     file format elf32-littleriscv
+

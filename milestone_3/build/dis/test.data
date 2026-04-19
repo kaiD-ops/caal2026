@@ -1,0 +1,3 @@
+
+build/exe/test.exe:     file format elf32-littleriscv
+

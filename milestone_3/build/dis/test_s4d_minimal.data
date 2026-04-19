@@ -1,0 +1,5 @@
+
+build/exe/test_s4d_minimal.exe:     file format elf32-littleriscv
+
+Contents of section .data:
+ f0040000 cdccccbd 0000003f 00000000           .......?....    

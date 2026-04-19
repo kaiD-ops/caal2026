@@ -1,0 +1,103 @@
+#1 0 80000000 70040117 r 02         f0040000  auipc    sp, 0x70040
+#2 0 80000004 01010113 r 02         f0040010  addi     sp, sp, 16
+#3 0 80000008 70040297 r 05         f0040008  auipc    t0, 0x70040
+#4 0 8000000c ff828293 r 05         f0040000  addi     t0, t0, -8
+#5 0 80000010 0002a007 f 00         bdcccccd  flw      ft0, 0x0(t0)
+#6 0 80000014 70040297 r 05         f0040014  auipc    t0, 0x70040
+#7 0 80000018 ff028293 r 05         f0040004  addi     t0, t0, -16
+#8 0 8000001c 0002a087 f 01         3f000000  flw      ft1, 0x0(t0)
+#9 0 80000020 20000553 f 0a         bdcccccd  fsgnj.s  fa0, ft0, ft0
+#10 0 80000024     2061 r 01         80000026  c.jal    . + 0x88
+#11 0 800000ac 400002b7 r 05         40000000  lui      t0, 0x40000
+#12 0 800000b0 f0028053 f 00         40000000  fmv.w.x  ft0, t0
+#13 0 800000b4 28050553 f 0a         bdcccccd  fmin.s   fa0, fa0, ft0
+#14 0 800000b8 c00002b7 r 05         c0000000  lui      t0, -0x40000
+#15 0 800000bc f0028053 f 00         c0000000  fmv.w.x  ft0, t0
+#16 0 800000c0 28051553 f 0a         bdcccccd  fmax.s   fa0, fa0, ft0
+#17 0 800000c4 3f8002b7 r 05         3f800000  lui      t0, 0x3f800
+#18 0 800000c8 f0028053 f 00         3f800000  fmv.w.x  ft0, t0
+#19 0 800000cc 00a07053 f 00         3f666666  fadd.s   ft0, ft0, fa0, dyn  +
+#19 0 800000cc 00a07053 c 0003       00000001  fadd.s   ft0, ft0, fa0, dyn
+#20 0 800000d0 10a570d3 f 01         3c23d70b  fmul.s   ft1, fa0, fa0, dyn
+#21 0 800000d4 3f0002b7 r 05         3f000000  lui      t0, 0x3f000
+#22 0 800000d8 f0028153 f 02         3f000000  fmv.w.x  ft2, t0
+#23 0 800000dc 1020f0d3 f 01         3ba3d70b  fmul.s   ft1, ft1, ft2, dyn
+#24 0 800000e0 00107053 f 00         3f67ae14  fadd.s   ft0, ft0, ft1, dyn
+#25 0 800000e4 10a0f0d3 f 01         ba03126f  fmul.s   ft1, ft1, fa0, dyn
+#26 0 800000e8 3e2ab2b7 r 05         3e2ab000  lui      t0, 0x3e2ab
+#27 0 800000ec aab28293 r 05         3e2aaaab  addi     t0, t0, -1365
+#28 0 800000f0 f0028153 f 02         3e2aaaab  fmv.w.x  ft2, t0
+#29 0 800000f4 1020f0d3 f 01         b8aec33f  fmul.s   ft1, ft1, ft2, dyn
+#30 0 800000f8 00107553 f 0a         3f67a89e  fadd.s   fa0, ft0, ft1, dyn
+#31 0 800000fc     8082 r 00         00000000  c.jr     ra
+#32 0 80000026 20a50253 f 04         3f67a89e  fsgnj.s  ft4, fa0, fa0
+#33 0 8000002a 20108553 f 0a         b8aec33f  fsgnj.s  fa0, ft1, ft1
+#34 0 8000002e     28cd r 01         80000030  c.jal    . + 0xf2
+#35 0 80000120 3f8002b7 r 05         3f800000  lui      t0, 0x3f800
+#36 0 80000124 f0028053 f 00         3f800000  fmv.w.x  ft0, t0
+#37 0 80000128 10a570d3 f 01         31ee9bfd  fmul.s   ft1, fa0, fa0, dyn
+#38 0 8000012c 3f0002b7 r 05         3f000000  lui      t0, 0x3f000
+#39 0 80000130 f0028153 f 02         3f000000  fmv.w.x  ft2, t0
+#40 0 80000134 1020f0d3 f 01         316e9bfd  fmul.s   ft1, ft1, ft2, dyn
+#41 0 80000138 08107553 f 0a         3f800000  fsub.s   fa0, ft0, ft1, dyn
+#42 0 8000013c     8082 r 00         00000000  c.jr     ra
+#43 0 80000030 20a502d3 f 05         3f800000  fsgnj.s  ft5, fa0, fa0
+#44 0 80000034 20108553 f 0a         316e9bfd  fsgnj.s  fa0, ft1, ft1
+#45 0 80000038     20d9 r 01         8000003a  c.jal    . + 0xc6
+#46 0 800000fe 20a50053 f 00         316e9bfd  fsgnj.s  ft0, fa0, fa0
+#47 0 80000102 10a570d3 f 01         235e6669  fmul.s   ft1, fa0, fa0, dyn
+#48 0 80000106 10a0f153 f 02         154f4ab9  fmul.s   ft2, ft1, fa0, dyn
+#49 0 8000010a 3e2ab2b7 r 05         3e2ab000  lui      t0, 0x3e2ab
+#50 0 8000010e aab28293 r 05         3e2aaaab  addi     t0, t0, -1365
+#51 0 80000112 f00281d3 f 03         3e2aaaab  fmv.w.x  ft3, t0
+#52 0 80000116 10317153 f 02         140a31d1  fmul.s   ft2, ft2, ft3, dyn
+#53 0 8000011a 08207553 f 0a         316e9bfd  fsub.s   fa0, ft0, ft2, dyn
+#54 0 8000011e     8082 r 00         00000000  c.jr     ra
+#55 0 8000003a 20a50353 f 06         316e9bfd  fsgnj.s  ft6, fa0, fa0
+#56 0 8000003e 105273d3 f 07         3f67a89e  fmul.s   ft7, ft4, ft5, dyn
+#57 0 80000042 10627e53 f 1c         3157ebeb  fmul.s   ft8, ft4, ft6, dyn
+#58 0 80000046     4281 r 05         00000000  c.li     t0, 0x0
+#59 0 80000048 f0028053 f 00         00000000  fmv.w.x  ft0, t0
+#60 0 8000004c f00280d3 f 01         00000000  fmv.w.x  ft1, t0
+#61 0 80000050 20000553 f 0a         00000000  fsgnj.s  fa0, ft0, ft0
+#62 0 80000054 201085d3 f 0b         00000000  fsgnj.s  fa1, ft1, ft1
+#63 0 80000058 20738653 f 0c         3f67a89e  fsgnj.s  fa2, ft7, ft7
+#64 0 8000005c 21ce06d3 f 0d         3157ebeb  fsgnj.s  fa3, ft8, ft8
+#65 0 80000060     28f9 r 01         80000062  c.jal    . + 0xde
+#66 0 8000013e 10c57053 f 00         00000000  fmul.s   ft0, fa0, fa2, dyn
+#67 0 80000142 10d5f0d3 f 01         00000000  fmul.s   ft1, fa1, fa3, dyn
+#68 0 80000146 08107153 f 02         00000000  fsub.s   ft2, ft0, ft1, dyn
+#69 0 8000014a 10d57053 f 00         00000000  fmul.s   ft0, fa0, fa3, dyn
+#70 0 8000014e 10c5f0d3 f 01         00000000  fmul.s   ft1, fa1, fa2, dyn
+#71 0 80000152 001071d3 f 03         00000000  fadd.s   ft3, ft0, ft1, dyn
+#72 0 80000156 20210553 f 0a         00000000  fsgnj.s  fa0, ft2, ft2
+#73 0 8000015a 203185d3 f 0b         00000000  fsgnj.s  fa1, ft3, ft3
+#74 0 8000015e     8082 r 00         00000000  c.jr     ra
+#75 0 80000062 3f8002b7 r 05         3f800000  lui      t0, 0x3f800
+#76 0 80000066 f0028253 f 04         3f800000  fmv.w.x  ft4, t0
+#77 0 8000006a f00282d3 f 05         3f800000  fmv.w.x  ft5, t0
+#78 0 8000006e 10527353 f 06         3f800000  fmul.s   ft6, ft4, ft5, dyn
+#79 0 80000072 00657153 f 02         3f800000  fadd.s   ft2, fa0, ft6, dyn
+#80 0 80000076 20b581d3 f 03         00000000  fsgnj.s  ft3, fa1, fa1
+#81 0 8000007a f0028253 f 04         3f800000  fmv.w.x  ft4, t0
+#82 0 8000007e f00282d3 f 05         3f800000  fmv.w.x  ft5, t0
+#83 0 80000082 20420553 f 0a         3f800000  fsgnj.s  fa0, ft4, ft4
+#84 0 80000086 205285d3 f 0b         3f800000  fsgnj.s  fa1, ft5, ft5
+#85 0 8000008a 20210653 f 0c         3f800000  fsgnj.s  fa2, ft2, ft2
+#86 0 8000008e 203186d3 f 0d         00000000  fsgnj.s  fa3, ft3, ft3
+#87 0 80000092     2075 r 01         80000094  c.jal    . + 0xac
+#88 0 8000013e 10c57053 f 00         3f800000  fmul.s   ft0, fa0, fa2, dyn
+#89 0 80000142 10d5f0d3 f 01         00000000  fmul.s   ft1, fa1, fa3, dyn
+#90 0 80000146 08107153 f 02         3f800000  fsub.s   ft2, ft0, ft1, dyn
+#91 0 8000014a 10d57053 f 00         00000000  fmul.s   ft0, fa0, fa3, dyn
+#92 0 8000014e 10c5f0d3 f 01         3f800000  fmul.s   ft1, fa1, fa2, dyn
+#93 0 80000152 001071d3 f 03         3f800000  fadd.s   ft3, ft0, ft1, dyn
+#94 0 80000156 20210553 f 0a         3f800000  fsgnj.s  fa0, ft2, ft2
+#95 0 8000015a 203185d3 f 0b         3f800000  fsgnj.s  fa1, ft3, ft3
+#96 0 8000015e     8082 r 00         00000000  c.jr     ra
+#97 0 80000094 70040297 r 05         f0040094  auipc    t0, 0x70040
+#98 0 80000098 f7428293 r 05         f0040008  addi     t0, t0, -140
+#99 0 8000009c 00a2a027 m f0040008   3f800000  fsw      fa0, 0x0(t0)
+#100 0 800000a0 d05802b7 r 05         d0580000  lui      t0, -0x2fa80
+#101 0 800000a4     4305 r 06         00000001  c.li     t1, 0x1
+#102 0 800000a6 0062a023 m d0580000   00000001  sw       t1, 0x0(t0)

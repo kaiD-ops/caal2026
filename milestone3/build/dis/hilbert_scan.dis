@@ -1,0 +1,62 @@
+
+build/exe/hilbert_scan.exe:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+80000000 <hilbert_scan>:
+80000000:	1101                	addi	sp,sp,-32
+80000002:	c022                	sw	s0,0(sp)
+80000004:	c226                	sw	s1,4(sp)
+80000006:	c44a                	sw	s2,8(sp)
+80000008:	c64e                	sw	s3,12(sp)
+8000000a:	c852                	sw	s4,16(sp)
+8000000c:	ca56                	sw	s5,20(sp)
+8000000e:	cc5a                	sw	s6,24(sp)
+80000010:	ce5e                	sw	s7,28(sp)
+80000012:	842a                	mv	s0,a0
+80000014:	84ae                	mv	s1,a1
+80000016:	8932                	mv	s2,a2
+80000018:	89b6                	mv	s3,a3
+8000001a:	4a01                	li	s4,0
+8000001c:	6b85                	lui	s7,0x1
+8000001e:	6285                	lui	t0,0x1
+
+80000020 <outer_loop>:
+80000020:	037a5c63          	bge	s4,s7,80000058 <done>
+80000024:	002a1313          	slli	t1,s4,0x2
+80000028:	9322                	add	t1,t1,s0
+8000002a:	00032b03          	lw	s6,0(t1)
+8000002e:	4a81                	li	s5,0
+
+80000030 <inner_loop>:
+80000030:	033ad263          	bge	s5,s3,80000054 <inner_done>
+80000034:	025a83b3          	mul	t2,s5,t0
+80000038:	93da                	add	t2,t2,s6
+8000003a:	038a                	slli	t2,t2,0x2
+8000003c:	93a6                	add	t2,t2,s1
+8000003e:	0003ae03          	lw	t3,0(t2)
+80000042:	033a0eb3          	mul	t4,s4,s3
+80000046:	9ed6                	add	t4,t4,s5
+80000048:	0e8a                	slli	t4,t4,0x2
+8000004a:	9eca                	add	t4,t4,s2
+8000004c:	01cea023          	sw	t3,0(t4)
+80000050:	0a85                	addi	s5,s5,1
+80000052:	bff9                	j	80000030 <inner_loop>
+
+80000054 <inner_done>:
+80000054:	0a05                	addi	s4,s4,1
+80000056:	b7e9                	j	80000020 <outer_loop>
+
+80000058 <done>:
+80000058:	4402                	lw	s0,0(sp)
+8000005a:	4492                	lw	s1,4(sp)
+8000005c:	4922                	lw	s2,8(sp)
+8000005e:	49b2                	lw	s3,12(sp)
+80000060:	4a42                	lw	s4,16(sp)
+80000062:	4ad2                	lw	s5,20(sp)
+80000064:	4b62                	lw	s6,24(sp)
+80000066:	4bf2                	lw	s7,28(sp)
+80000068:	6105                	addi	sp,sp,32
+8000006a:	8082                	ret
+8000006c:	0001                	nop

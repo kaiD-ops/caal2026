@@ -1,0 +1,116 @@
+
+build/exe/test_full_sequence.exe:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+80000000 <_start>:
+80000000:	70040117          	auipc	sp,0x70040
+80000004:	02010113          	addi	sp,sp,32 # f0040020 <_stack_start>
+80000008:	4401                	c.li	s0,0
+8000000a:	4491                	c.li	s1,4
+
+8000000c <test_loop>:
+8000000c:	08945d63          	bge	s0,s1,800000a6 <done>
+80000010:	70040297          	auipc	t0,0x70040
+80000014:	ff028293          	addi	t0,t0,-16 # f0040000 <test_A_real>
+80000018:	00241313          	slli	t1,s0,0x2
+8000001c:	006283b3          	add	t2,t0,t1
+80000020:	0003a007          	flw	ft0,0(t2)
+80000024:	70040297          	auipc	t0,0x70040
+80000028:	fec28293          	addi	t0,t0,-20 # f0040010 <test_A_imag>
+8000002c:	006283b3          	add	t2,t0,t1
+80000030:	0003a087          	flw	ft1,0(t2)
+80000034:	20000553          	fsgnj.s	fa0,ft0,ft0
+80000038:	28ad                	c.jal	800000b2 <exp_f>
+8000003a:	20a50253          	fsgnj.s	ft4,fa0,fa0
+8000003e:	20108553          	fsgnj.s	fa0,ft1,ft1
+80000042:	20d5                	c.jal	80000126 <cos_f>
+80000044:	20a502d3          	fsgnj.s	ft5,fa0,fa0
+80000048:	20108553          	fsgnj.s	fa0,ft1,ft1
+8000004c:	2865                	c.jal	80000104 <sin_f>
+8000004e:	20a50353          	fsgnj.s	ft6,fa0,fa0
+80000052:	105273d3          	fmul.s	ft7,ft4,ft5
+80000056:	10627e53          	fmul.s	ft8,ft4,ft6
+8000005a:	f0000053          	fmv.w.x	ft0,zero
+8000005e:	f00000d3          	fmv.w.x	ft1,zero
+80000062:	20000553          	fsgnj.s	fa0,ft0,ft0
+80000066:	201085d3          	fsgnj.s	fa1,ft1,ft1
+8000006a:	20738653          	fsgnj.s	fa2,ft7,ft7
+8000006e:	21ce06d3          	fsgnj.s	fa3,ft8,ft8
+80000072:	28c9                	c.jal	80000144 <complex_mul>
+80000074:	3f8002b7          	lui	t0,0x3f800
+80000078:	f0028253          	fmv.w.x	ft4,t0
+8000007c:	f00282d3          	fmv.w.x	ft5,t0
+80000080:	10527353          	fmul.s	ft6,ft4,ft5
+80000084:	00657153          	fadd.s	ft2,fa0,ft6
+80000088:	f0028253          	fmv.w.x	ft4,t0
+8000008c:	f00002d3          	fmv.w.x	ft5,zero
+80000090:	20420553          	fsgnj.s	fa0,ft4,ft4
+80000094:	205285d3          	fsgnj.s	fa1,ft5,ft5
+80000098:	20210653          	fsgnj.s	fa2,ft2,ft2
+8000009c:	203186d3          	fsgnj.s	fa3,ft3,ft3
+800000a0:	2055                	c.jal	80000144 <complex_mul>
+800000a2:	0405                	c.addi	s0,1
+800000a4:	b7a5                	c.j	8000000c <test_loop>
+
+800000a6 <done>:
+800000a6:	d05802b7          	lui	t0,0xd0580
+800000aa:	4305                	c.li	t1,1
+800000ac:	0062a023          	sw	t1,0(t0) # d0580000 <_end+0x5057fe9a>
+800000b0:	a001                	c.j	800000b0 <done+0xa>
+
+800000b2 <exp_f>:
+800000b2:	400002b7          	lui	t0,0x40000
+800000b6:	f0028053          	fmv.w.x	ft0,t0
+800000ba:	28050553          	fmin.s	fa0,fa0,ft0
+800000be:	c00002b7          	lui	t0,0xc0000
+800000c2:	f0028053          	fmv.w.x	ft0,t0
+800000c6:	28051553          	fmax.s	fa0,fa0,ft0
+800000ca:	3f8002b7          	lui	t0,0x3f800
+800000ce:	f0028053          	fmv.w.x	ft0,t0
+800000d2:	00a07053          	fadd.s	ft0,ft0,fa0
+800000d6:	10a570d3          	fmul.s	ft1,fa0,fa0
+800000da:	3f0002b7          	lui	t0,0x3f000
+800000de:	f0028153          	fmv.w.x	ft2,t0
+800000e2:	1020f0d3          	fmul.s	ft1,ft1,ft2
+800000e6:	00107053          	fadd.s	ft0,ft0,ft1
+800000ea:	10a0f0d3          	fmul.s	ft1,ft1,fa0
+800000ee:	3e2ab2b7          	lui	t0,0x3e2ab
+800000f2:	aab28293          	addi	t0,t0,-1365 # 3e2aaaab <_start-0x41d55555>
+800000f6:	f0028153          	fmv.w.x	ft2,t0
+800000fa:	1020f0d3          	fmul.s	ft1,ft1,ft2
+800000fe:	00107553          	fadd.s	fa0,ft0,ft1
+80000102:	8082                	c.jr	ra
+
+80000104 <sin_f>:
+80000104:	20a50053          	fsgnj.s	ft0,fa0,fa0
+80000108:	10a570d3          	fmul.s	ft1,fa0,fa0
+8000010c:	10a0f153          	fmul.s	ft2,ft1,fa0
+80000110:	3e2ab2b7          	lui	t0,0x3e2ab
+80000114:	aab28293          	addi	t0,t0,-1365 # 3e2aaaab <_start-0x41d55555>
+80000118:	f00281d3          	fmv.w.x	ft3,t0
+8000011c:	10317153          	fmul.s	ft2,ft2,ft3
+80000120:	08207553          	fsub.s	fa0,ft0,ft2
+80000124:	8082                	c.jr	ra
+
+80000126 <cos_f>:
+80000126:	3f8002b7          	lui	t0,0x3f800
+8000012a:	f0028053          	fmv.w.x	ft0,t0
+8000012e:	10a570d3          	fmul.s	ft1,fa0,fa0
+80000132:	3f0002b7          	lui	t0,0x3f000
+80000136:	f0028153          	fmv.w.x	ft2,t0
+8000013a:	1020f0d3          	fmul.s	ft1,ft1,ft2
+8000013e:	08107553          	fsub.s	fa0,ft0,ft1
+80000142:	8082                	c.jr	ra
+
+80000144 <complex_mul>:
+80000144:	10c57053          	fmul.s	ft0,fa0,fa2
+80000148:	10d5f0d3          	fmul.s	ft1,fa1,fa3
+8000014c:	08107153          	fsub.s	ft2,ft0,ft1
+80000150:	10d57053          	fmul.s	ft0,fa0,fa3
+80000154:	10c5f0d3          	fmul.s	ft1,fa1,fa2
+80000158:	001071d3          	fadd.s	ft3,ft0,ft1
+8000015c:	20210553          	fsgnj.s	fa0,ft2,ft2
+80000160:	203185d3          	fsgnj.s	fa1,ft3,ft3
+80000164:	8082                	c.jr	ra

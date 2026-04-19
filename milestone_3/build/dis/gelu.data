@@ -1,0 +1,7 @@
+
+build/exe/gelu.exe:     file format elf32-littleriscv
+
+Contents of section .data:
+ f0040000 000000c0 000080bf 00000000 0000803f  ...............?
+ f0040010 00000040 1327373d 2a424c3f 0000803f  ...@.'7=*BL?...?
+ f0040020 0000003f                             ...?            

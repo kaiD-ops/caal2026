@@ -1,0 +1,10 @@
+
+build/exe/math.exe:     file format elf32-littleriscv
+
+Contents of section .data:
+ f0040000 0000b042 0000b0c2 0000807f 3baab83f  ...B........;..?
+ f0040010 1872313f 0000803f 0000003f abaa2a3e  .r1?...?...?..*>
+ f0040020 acaa2a3d 8588083c 0000803f 000000bf  ..*=...<...?....
+ f0040030 acaa2a3d 6a0bb6ba 0000803f abaa2abe  ..*=j......?..*.
+ f0040040 8588083c 470c50b9 db0f4940 db0fc940  ...<G.P...I@...@
+ f0040050 83f9223e 0000803f 00000040 00008040  ..">...?...@...@

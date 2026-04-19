@@ -1,0 +1,47 @@
+
+build/exe/test_sincos_loop.exe:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+80000000 <_start>:
+80000000:	70040117          	auipc	sp,0x70040
+80000004:	00010113          	addi	sp,sp,0 # f0040000 <_stack_start>
+80000008:	3f8002b7          	lui	t0,0x3f800
+8000000c:	f0028553          	fmv.w.x	fa0,t0
+80000010:	4401                	c.li	s0,0
+
+80000012 <loop>:
+80000012:	42a9                	c.li	t0,10
+80000014:	00545663          	bge	s0,t0,80000020 <done>
+80000018:	2811                	c.jal	8000002c <sin_f>
+8000001a:	2815                	c.jal	8000004e <cos_f>
+8000001c:	0405                	c.addi	s0,1
+8000001e:	bfd5                	c.j	80000012 <loop>
+
+80000020 <done>:
+80000020:	d05802b7          	lui	t0,0xd0580
+80000024:	4305                	c.li	t1,1
+80000026:	0062a023          	sw	t1,0(t0) # d0580000 <_end+0x5057ff94>
+8000002a:	a001                	c.j	8000002a <done+0xa>
+
+8000002c <sin_f>:
+8000002c:	20a50053          	fsgnj.s	ft0,fa0,fa0
+80000030:	10a570d3          	fmul.s	ft1,fa0,fa0
+80000034:	10a0f153          	fmul.s	ft2,ft1,fa0
+80000038:	3e2ab2b7          	lui	t0,0x3e2ab
+8000003c:	aab28293          	addi	t0,t0,-1365 # 3e2aaaab <_start-0x41d55555>
+80000040:	f00281d3          	fmv.w.x	ft3,t0
+80000044:	10317153          	fmul.s	ft2,ft2,ft3
+80000048:	08207553          	fsub.s	fa0,ft0,ft2
+8000004c:	8082                	c.jr	ra
+
+8000004e <cos_f>:
+8000004e:	3f8002b7          	lui	t0,0x3f800
+80000052:	f0028053          	fmv.w.x	ft0,t0
+80000056:	10a570d3          	fmul.s	ft1,fa0,fa0
+8000005a:	3f0002b7          	lui	t0,0x3f000
+8000005e:	f0028153          	fmv.w.x	ft2,t0
+80000062:	1020f0d3          	fmul.s	ft1,ft1,ft2
+80000066:	08107553          	fsub.s	fa0,ft0,ft1
+8000006a:	8082                	c.jr	ra

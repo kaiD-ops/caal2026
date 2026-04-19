@@ -1,0 +1,22 @@
+
+build/exe/test_fpu_ops.exe:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+80000000 <_start>:
+80000000:	70040117          	auipc	sp,0x70040
+80000004:	00010113          	mv	sp,sp
+80000008:	3f8002b7          	lui	t0,0x3f800
+8000000c:	f0028053          	fmv.w.x	ft0,t0
+80000010:	400002b7          	lui	t0,0x40000
+80000014:	f00280d3          	fmv.w.x	ft1,t0
+80000018:	00107153          	fadd.s	ft2,ft0,ft1
+8000001c:	101071d3          	fmul.s	ft3,ft0,ft1
+80000020:	404002b7          	lui	t0,0x40400
+80000024:	f0028253          	fmv.w.x	ft4,t0
+80000028:	180272d3          	fdiv.s	ft5,ft4,ft0
+8000002c:	d05802b7          	lui	t0,0xd0580
+80000030:	4305                	li	t1,1
+80000032:	0062a023          	sw	t1,0(t0) # d0580000 <_end+0x5057ffc8>
+80000036:	a001                	j	80000036 <_start+0x36>
