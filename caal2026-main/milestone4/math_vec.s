@@ -1,8 +1,3 @@
-# =============================================================================
-# math_vec.s  -  Scalar float math helpers (same as M3; transcendentals
-#                cannot be meaningfully vectorized with per-element accuracy)
-# Routines: expf, cosf, sinf, tanhf
-# =============================================================================
 
 .section .text
 

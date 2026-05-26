@@ -18,7 +18,6 @@ gelu_inplace:
     mv      s0, a0          # ptr
     mv      s1, a1          # n
 
-    # Load constants in float callee-saved regs
     lui     t0, %hi(gelu_c1)
     flw     fs3, %lo(gelu_c1)(t0)   # 0.044715
     lui     t0, %hi(gelu_c2)
@@ -36,7 +35,6 @@ gelu_batch:
     li      t0, 8
     blt     s1, t0, gelu_tail   # fewer than 8 left -> scalar tail
 
-    # ---- vector phase 1: compute tanh arguments ----
     vsetvli zero, t0, e32, m1, ta, ma  # VL=8
     vle32.v v0, (s0)                   # v0 = x[0..7]
 
@@ -46,30 +44,25 @@ gelu_batch:
     vfadd.vv v1, v1, v0                # v1 = x + x^3*c1
     vfmul.vf v1, v1, fs4               # v1 = (x + x^3*c1) * c2  (tanh arg)
 
-    # Store tanh args to BSS buffer
     lui     t0, %hi(gelu_tanh_in)
     addi    t0, t0, %lo(gelu_tanh_in)
     vse32.v v1, (t0)
     mv      s2, t0                      # s2 = gelu_tanh_in
 
-    # Prepare output buffer pointer
     lui     t0, %hi(gelu_tanh_out)
     addi    s3, t0, %lo(gelu_tanh_out)  # s3 = gelu_tanh_out
     li      s4, 8                       # counter
 
-    # ---- scalar phase 2: custom tanh using expf (friend's method) ----
 gelu_tanh_loop:
     beqz    s4, gelu_tanh_done
     flw     fa0, 0(s2)                  # load tanh argument
     
-    # Clip to [-8, 8] like friend's code
     flt.s   t4, fs2, fa0                # if 8.0 < arg
     bnez    t4, tanh_clip_pos
     fneg.s  ft0, fs2                    # -8.0
     flt.s   t4, fa0, ft0                # if arg < -8.0
     bnez    t4, tanh_clip_neg
 
-    # tanh(x) = (e^(2x) - 1) / (e^(2x) + 1)
     fmul.s  fa0, fa0, fs1               # 2 * x
     call    expf                        # e^(2x)
     fmv.s   ft0, fa0                    # save e^(2x)
@@ -95,7 +88,6 @@ tanh_store:
     j       gelu_tanh_loop
 
 gelu_tanh_done:
-    # ---- vector phase 3: x * 0.5 * (1 + tanh) ----
     li      t0, 8
     vsetvli zero, t0, e32, m1, ta, ma
     vle32.v v0, (s0)                    # reload original x values
@@ -112,9 +104,6 @@ gelu_tanh_done:
     addi    s1, s1, -8
     j       gelu_batch
 
-# ================================================================
-# Scalar tail for remaining < 8 elements (uses same tanh method)
-# ================================================================
 gelu_tail:
     beqz    s1, gelu_done
     flw     fa0, 0(s0)                  # load x
@@ -126,7 +115,6 @@ gelu_tail:
     fadd.s  ft0, fa0, ft0
     fmul.s  ft0, ft0, fs4
 
-    # Clip to [-8, 8] like friend's code
     fmv.s   fa0, ft0
     flt.s   t4, fs2, fa0                # if 8.0 < arg
     bnez    t4, tail_tanh_clip_pos

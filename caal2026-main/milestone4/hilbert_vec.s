@@ -1,11 +1,4 @@
-# =============================================================================
-# hilbert_vec.s  -  Vectorized Hilbert Scan
-# Uses vluxei32.v (indexed/gather load) to reorder 4096 pixels in batches of 8.
-# Each iteration: load 8 int32 indices, scale by 4, gather 8 floats, store.
-# Reduces ~41K scalar instructions to ~5K vector instructions.
-#
-# void hilbert_scan(int32_t* indices, float* img, float* out)
-# a0=indices, a1=img, a2=out
+t
 # =============================================================================
 .section .text
 .global hilbert_scan
