@@ -1,0 +1,6 @@
+num_samples=12
+c_in=1
+seq_len=4096
+d_model=64
+d_state=32
+n_classes=4

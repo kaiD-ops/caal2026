@@ -1,0 +1,146 @@
+
+build/exe/math.exe:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+80000000 <expf>:
+80000000:	f00402b7          	lui	t0,0xf0040
+80000004:	0002a087          	flw	ft1,0(t0) # f0040000 <exp_max>
+80000008:	a0a09353          	flt.s	t1,ft1,fa0
+8000000c:	00030963          	beq	t1,zero,8000001e <expf+0x1e>
+80000010:	f00402b7          	lui	t0,0xf0040
+80000014:	0082a303          	lw	t1,8(t0) # f0040008 <exp_inf_bits>
+80000018:	f0030553          	fmv.w.x	fa0,t1
+8000001c:	8082                	c.jr	ra
+8000001e:	f00402b7          	lui	t0,0xf0040
+80000022:	0042a087          	flw	ft1,4(t0) # f0040004 <exp_min>
+80000026:	a0151353          	flt.s	t1,fa0,ft1
+8000002a:	00030563          	beq	t1,zero,80000034 <expf+0x34>
+8000002e:	f0000553          	fmv.w.x	fa0,zero
+80000032:	8082                	c.jr	ra
+80000034:	f00402b7          	lui	t0,0xf0040
+80000038:	00c2a087          	flw	ft1,12(t0) # f004000c <exp_log2e>
+8000003c:	10157153          	fmul.s	ft2,fa0,ft1
+80000040:	c00103d3          	fcvt.w.s	t2,ft2,rne
+80000044:	d003f1d3          	fcvt.s.w	ft3,t2
+80000048:	f00402b7          	lui	t0,0xf0040
+8000004c:	0102a207          	flw	ft4,16(t0) # f0040010 <exp_ln2>
+80000050:	1041f2d3          	fmul.s	ft5,ft3,ft4
+80000054:	08557053          	fsub.s	ft0,fa0,ft5
+80000058:	f00402b7          	lui	t0,0xf0040
+8000005c:	0242a587          	flw	fa1,36(t0) # f0040024 <exp_c5>
+80000060:	f00402b7          	lui	t0,0xf0040
+80000064:	0202a607          	flw	fa2,32(t0) # f0040020 <exp_c4>
+80000068:	60b075c3          	fmadd.s	fa1,ft0,fa1,fa2
+8000006c:	f00402b7          	lui	t0,0xf0040
+80000070:	01c2a607          	flw	fa2,28(t0) # f004001c <exp_c3>
+80000074:	60b075c3          	fmadd.s	fa1,ft0,fa1,fa2
+80000078:	f00402b7          	lui	t0,0xf0040
+8000007c:	0182a607          	flw	fa2,24(t0) # f0040018 <exp_c2>
+80000080:	60b075c3          	fmadd.s	fa1,ft0,fa1,fa2
+80000084:	f00402b7          	lui	t0,0xf0040
+80000088:	0142a607          	flw	fa2,20(t0) # f0040014 <exp_c1>
+8000008c:	60b075c3          	fmadd.s	fa1,ft0,fa1,fa2
+80000090:	60b07543          	fmadd.s	fa0,ft0,fa1,fa2
+80000094:	07f38393          	addi	t2,t2,127
+80000098:	03de                	c.slli	t2,0x17
+8000009a:	f00380d3          	fmv.w.x	ft1,t2
+8000009e:	10157553          	fmul.s	fa0,fa0,ft1
+800000a2:	8082                	c.jr	ra
+
+800000a4 <cosf>:
+800000a4:	f00402b7          	lui	t0,0xf0040
+800000a8:	04c2a087          	flw	ft1,76(t0) # f004004c <math_2pi>
+800000ac:	f00402b7          	lui	t0,0xf0040
+800000b0:	0502a107          	flw	ft2,80(t0) # f0040050 <math_inv2pi>
+800000b4:	102571d3          	fmul.s	ft3,fa0,ft2
+800000b8:	c001a353          	fcvt.w.s	t1,ft3,rdn
+800000bc:	d00371d3          	fcvt.s.w	ft3,t1
+800000c0:	1011f1d3          	fmul.s	ft3,ft3,ft1
+800000c4:	08357553          	fsub.s	fa0,fa0,ft3
+800000c8:	f00402b7          	lui	t0,0xf0040
+800000cc:	0482a087          	flw	ft1,72(t0) # f0040048 <math_pi>
+800000d0:	a0a09353          	flt.s	t1,ft1,fa0
+800000d4:	00030663          	beq	t1,zero,800000e0 <cos_reduced>
+800000d8:	08157553          	fsub.s	fa0,fa0,ft1
+800000dc:	08157553          	fsub.s	fa0,fa0,ft1
+
+800000e0 <cos_reduced>:
+800000e0:	10a57053          	fmul.s	ft0,fa0,fa0
+800000e4:	f00402b7          	lui	t0,0xf0040
+800000e8:	0342a087          	flw	ft1,52(t0) # f0040034 <cos_c3>
+800000ec:	f00402b7          	lui	t0,0xf0040
+800000f0:	0302a107          	flw	ft2,48(t0) # f0040030 <cos_c2>
+800000f4:	101070c3          	fmadd.s	ft1,ft0,ft1,ft2
+800000f8:	f00402b7          	lui	t0,0xf0040
+800000fc:	02c2a107          	flw	ft2,44(t0) # f004002c <cos_c1>
+80000100:	101070c3          	fmadd.s	ft1,ft0,ft1,ft2
+80000104:	f00402b7          	lui	t0,0xf0040
+80000108:	0282a107          	flw	ft2,40(t0) # f0040028 <cos_c0>
+8000010c:	10107543          	fmadd.s	fa0,ft0,ft1,ft2
+80000110:	8082                	c.jr	ra
+
+80000112 <sinf>:
+80000112:	20a513d3          	fsgnjn.s	ft7,fa0,fa0
+80000116:	20a52553          	fsgnjx.s	fa0,fa0,fa0
+8000011a:	f00402b7          	lui	t0,0xf0040
+8000011e:	04c2a087          	flw	ft1,76(t0) # f004004c <math_2pi>
+80000122:	f00402b7          	lui	t0,0xf0040
+80000126:	0502a107          	flw	ft2,80(t0) # f0040050 <math_inv2pi>
+8000012a:	102571d3          	fmul.s	ft3,fa0,ft2
+8000012e:	c001a353          	fcvt.w.s	t1,ft3,rdn
+80000132:	d00371d3          	fcvt.s.w	ft3,t1
+80000136:	1011f1d3          	fmul.s	ft3,ft3,ft1
+8000013a:	08357553          	fsub.s	fa0,fa0,ft3
+8000013e:	f00402b7          	lui	t0,0xf0040
+80000142:	0482a087          	flw	ft1,72(t0) # f0040048 <math_pi>
+80000146:	a0a09353          	flt.s	t1,ft1,fa0
+8000014a:	00030663          	beq	t1,zero,80000156 <sin_reduced>
+8000014e:	08157553          	fsub.s	fa0,fa0,ft1
+80000152:	08157553          	fsub.s	fa0,fa0,ft1
+
+80000156 <sin_reduced>:
+80000156:	10a57053          	fmul.s	ft0,fa0,fa0
+8000015a:	f00402b7          	lui	t0,0xf0040
+8000015e:	0442a087          	flw	ft1,68(t0) # f0040044 <sin_c3>
+80000162:	f00402b7          	lui	t0,0xf0040
+80000166:	0402a107          	flw	ft2,64(t0) # f0040040 <sin_c2>
+8000016a:	101070c3          	fmadd.s	ft1,ft0,ft1,ft2
+8000016e:	f00402b7          	lui	t0,0xf0040
+80000172:	03c2a107          	flw	ft2,60(t0) # f004003c <sin_c1>
+80000176:	101070c3          	fmadd.s	ft1,ft0,ft1,ft2
+8000017a:	f00402b7          	lui	t0,0xf0040
+8000017e:	0382a107          	flw	ft2,56(t0) # f0040038 <sin_c0>
+80000182:	101070c3          	fmadd.s	ft1,ft0,ft1,ft2
+80000186:	10157553          	fmul.s	fa0,fa0,ft1
+8000018a:	20752553          	fsgnjx.s	fa0,fa0,ft7
+8000018e:	8082                	c.jr	ra
+
+80000190 <tanhf>:
+80000190:	1161                	c.addi	sp,-8
+80000192:	e02a                	c.fswsp	fa0,0(sp)
+80000194:	20a52053          	fsgnjx.s	ft0,fa0,fa0
+80000198:	f00402b7          	lui	t0,0xf0040
+8000019c:	05c2a087          	flw	ft1,92(t0) # f004005c <tanh_sat>
+800001a0:	a0101353          	flt.s	t1,ft0,ft1
+800001a4:	02030563          	beq	t1,zero,800001ce <tanh_sat_case>
+800001a8:	f00402b7          	lui	t0,0xf0040
+800001ac:	0582a087          	flw	ft1,88(t0) # f0040058 <math_two>
+800001b0:	10157553          	fmul.s	fa0,fa0,ft1
+800001b4:	35b1                	c.jal	80000000 <expf>
+800001b6:	f00402b7          	lui	t0,0xf0040
+800001ba:	0542a087          	flw	ft1,84(t0) # f0040054 <math_one>
+800001be:	08157153          	fsub.s	ft2,fa0,ft1
+800001c2:	001571d3          	fadd.s	ft3,fa0,ft1
+800001c6:	18317553          	fdiv.s	fa0,ft2,ft3
+800001ca:	0121                	c.addi	sp,8
+800001cc:	8082                	c.jr	ra
+
+800001ce <tanh_sat_case>:
+800001ce:	6582                	c.flwsp	fa1,0(sp)
+800001d0:	f00402b7          	lui	t0,0xf0040
+800001d4:	0542a507          	flw	fa0,84(t0) # f0040054 <math_one>
+800001d8:	20b50553          	fsgnj.s	fa0,fa0,fa1
+800001dc:	0121                	c.addi	sp,8
+800001de:	8082                	c.jr	ra

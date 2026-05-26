@@ -1,0 +1,6 @@
+# End-to-end pipeline output - sample_09
+# Extracted from VeeR-iSS softmax validation run
+# Probabilities: [0.901615, 0.010982, 0.036944, 0.05046]
+# Predicted class: 0 (Smooth Round)
+3f66d037 3c33ec20 3d1752e6 3d4eaea2
+Predicted: 0

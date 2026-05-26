@@ -1,0 +1,15 @@
+=== Static Instruction Count Analysis ===
+Platform: RV32IMF, riscv32-unknown-elf-gcc 15.2.0
+
+File            Total    R-type   I-type   S-type   B-type   U-type   J-type   Other
+math.s          151      56(37%)  29(19%)  1(1%)    5(3%)    27(18%)  8(5%)    25(17%)
+layers.s        381      160(42%) 56(15%)  38(10%)  15(4%)   15(4%)   31(8%)   66(17%)
+main.s          135      38(28%)  4(3%)    6(4%)    4(3%)    35(26%)  9(7%)    39(29%)
+TOTAL           667      254(38%) 89(13%)  45(7%)   24(4%)   77(12%)  48(7%)   130(19%)
+
+Notes:
+- R-type dominates (38%) due to heavy floating-point arithmetic in S4D and math helpers
+- U-type (12%) high in main.s due to lui/addi address loading pattern for large memory map
+- Other (19%) includes pseudo-instructions (mv, li, call, ret) expanded by assembler
+- S-type (7%) reflects register saves/restores in function prologues/epilogues
+- B-type low (4%) since main computation is loop-based with few conditionals
