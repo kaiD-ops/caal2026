@@ -128,8 +128,8 @@ cos_reduced:
 # --------------------------------------------------------------------------
 .global sinf
 sinf:
-    # Save sign, work with |x|, restore sign at end
-    fsgnjn.s ft7, fa0, fa0              # ft7 = -|fa0| (negative copy)
+    # Save original value (to recover sign later)
+    fmv.s   ft7, fa0                    # ft7 = original x (with sign)
     fabs.s  fa0, fa0                    # fa0 = |x|
 
     # reduce mod 2π
@@ -167,7 +167,7 @@ sin_reduced:
     fmul.s  fa0, fa0, ft1               # x * (1 + x²*(...)) = sin|x|
 
     # restore original sign
-    fsgnjx.s fa0, fa0, ft7              # apply sign from ft7
+    fsgnj.s fa0, fa0, ft7               # copy sign from original x into result
     ret
 
 # --------------------------------------------------------------------------

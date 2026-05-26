@@ -29,8 +29,7 @@ gelu_inplace:
     sw      s1,  8(sp)
     sw      s2, 12(sp)
     sw      s3, 16(sp)
-    sw      s4, 20(sp)
-    # Save float callee-saved registers
+    # Save float callee-saved registers (integer s4 not used; float saves start at 20)
     fsw     fs0, 20(sp)
     fsw     fs1, 24(sp)
     fsw     fs2, 28(sp)
@@ -139,7 +138,6 @@ gelu_vec_done:
     lw      s1,  8(sp)
     lw      s2, 12(sp)
     lw      s3, 16(sp)
-    lw      s4, 20(sp)
     flw     fs0, 20(sp)
     flw     fs1, 24(sp)
     flw     fs2, 28(sp)

@@ -180,16 +180,16 @@ _start:
     fsw     fa3, 12(t1)
 
     # Argmax → output_pred
-    flt.s   t0, fa1, fa0
     li      t2, 0
+    flt.s   t0, fa0, fa1               # t0 = (fa0 < fa1)?
     beqz    t0, 1f
     fmv.s   fa0, fa1
     li      t2, 1
-1:  flt.s   t0, fa2, fa0
+1:  flt.s   t0, fa0, fa2               # t0 = (fa0 < fa2)?
     beqz    t0, 2f
     fmv.s   fa0, fa2
     li      t2, 2
-2:  flt.s   t0, fa3, fa0
+2:  flt.s   t0, fa0, fa3               # t0 = (fa0 < fa3)?
     beqz    t0, 3f
     li      t2, 3
 3:  lui     t0, %hi(output_pred)

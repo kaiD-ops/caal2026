@@ -68,7 +68,7 @@ ll_o:
 
     # Vectorized dot product: acc += sum_i W[o][i] * in[t][i]
     mv      t0, s4          # remaining in_dim elements
-    mv      t1, t6          # walking W row pointer
+    # t6 is the walking W row pointer (already set)
     mv      t2, s2          # walking in row pointer
 
     # Zero-accumulate vector register set (v0 used as zero-init reduction)
@@ -93,8 +93,7 @@ ll_dot:
     # Multiply into v8
     vfmul.vv v8, v0, v4     # v8 = W * in element-wise
 
-    # Reduce v8 into scalar using vfredusum; init sum vector v12 = 0
-    vfmv.v.f v12, fa7       # scratch — overwritten; use zero
+    # Reduce v8 into scalar using vfredusum; init sum vector v12[0] = 0.0
     fmv.w.x  ft0, zero
     vfmv.s.f v12, ft0       # v12[0] = 0.0  (reduction identity)
     vfredusum.vs v12, v8, v12  # v12[0] = sum(v8)
