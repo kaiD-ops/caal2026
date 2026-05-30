@@ -2,18 +2,6 @@
 
 Implementation of Structured State Space (S4) models for galaxy morphology classification using the GalaxyMNIST dataset.
 
-## Project Status: ✅ Implementation Complete
-
-All core components have been implemented:
-- ✅ S4 Recurrent formulation (`model/s4_recurrent.py`)
-- ✅ S4 Convolutional formulation (`model/s4_conv.py`)
-- ✅ S4D Diagonal parameterization (`model/s4d.py`) - Modified for direct convolution
-- ✅ Hilbert curve scanning (`model/hilbert.py`)
-- ✅ TakeLastTimestep layer (`model/tlts.py`)
-- ✅ GalaxyClassifier forward pass (`model/gclassifier.py`)
-- ✅ Training notebook with visualization (`train.ipynb`)
-- ✅ Numerical validation script (`validate_s4.py`)
-- ✅ LaTeX report template (`report.tex`)
 
 ## Environment Setup
 
