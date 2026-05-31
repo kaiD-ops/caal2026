@@ -1,8 +1,4 @@
-# =============================================================================
-# hilbert_vec.s  –  RVV-vectorized Hilbert Scan
-#
-# Reorders image pixels according to pre-computed Hilbert curve indices.
-# =============================================================================
+
 
 .section .text
 .global hilbert_scan
@@ -15,13 +11,11 @@ hilbert_scan:
 hs_vec_loop:
     beqz    t0, hs_vec_done
 
-    # FIX: Use m1 grouping to prevent illegal register overlap and ensure 
+    
     # hardware compatibility across all store variations (vse32.v).
     vsetvli t3, t0, e32, m1, ta, ma   # t3 = vl actually granted
 
-    # Load a strip of Hilbert indices from t1.  They are stored as float32
-    # (0.0, 1.0, 65.0, ...), so convert to integer before using them as gather
-    # offsets — otherwise only index 0 (== float 0.0 == int 0) gathers correctly.
+    
     vle32.v  v0, (t1)              # v0 = float-encoded indices
     vfcvt.rtz.x.f.v v0, v0         # v0 = (int32) index   (truncate toward zero)
 
@@ -34,7 +28,7 @@ hs_vec_loop:
     # Store gathered values sequentially to output destination
     vse32.v  v2, (t2)
 
-    # Advance pointers and element counter using granted hardware vl (t3)
+    
     slli    t4, t3, 2              # bytes = vl * 4
     add     t1, t1, t4             # indices pointer forward
     add     t2, t2, t4             # out pointer forward
