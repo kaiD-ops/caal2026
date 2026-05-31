@@ -1,13 +1,3 @@
-# =============================================================================
-# softmax_vec.s - Softmax activation (scalar, n=4 elements)
-#
-# Vectorization justification: n=4 is below any reasonable VLEN/SEW minimum
-# useful vector length. The overhead of vsetvli + vector load/store exceeds
-# the cost of 4 scalar instructions. Retained as scalar per milestone spec.
-#
-# void softmax_inplace_vec(float* x, int n)
-# a0=x, a1=n
-# =============================================================================
 .section .text
 .global softmax_inplace_vec
 
