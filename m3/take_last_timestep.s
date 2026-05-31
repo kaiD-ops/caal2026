@@ -1,14 +1,4 @@
-# =============================================================================
-# take_last_timestep.s - TakeLastTimestep layer
-#
-# Extracts final timestep from (SEQ_LEN=4096, D_MODEL=64) buffer.
-# Byte offset to last row: (4096-1) * 64 * 4 = 1048320 bytes.
-# Copies 64 floats (256 bytes).
-#
-# void take_last_timestep(float* in, float* out)
-# a0=in, a1=out
-# MSE target: < 1e-12 (exact copy)
-# =============================================================================
+
 .section .text
 .global take_last_timestep
 
