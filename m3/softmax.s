@@ -1,14 +1,4 @@
-# =============================================================================
-# softmax.s - Softmax activation
-#
-# In-place softmax: x[i] = exp(x[i] - max) / sum(exp(x[j] - max))
-# Uses numerically stable formulation (subtract max before exp).
-# Calls expf from math.s.
-#
-# void softmax_inplace(float* x, int n)
-# a0=x, a1=n
-# MSE target: < 1e-8
-# =============================================================================
+
 .section .text
 .global softmax_inplace
 
@@ -40,7 +30,7 @@ sm_max_done:
     fmv.s   fs0, fa0        # fs0 = max (callee-saved)
     fmv.w.x fa3, zero       # sum = 0.0
 
-    # --- Compute exp(x[i] - max) in-place, accumulate sum ---
+
     li      s2, 0
 sm_exp:
     bge     s2, s1, sm_exp_done
