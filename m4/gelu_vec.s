@@ -1,15 +1,4 @@
-# =============================================================================
-# gelu_vec.s - GELU activation (RVV vectorized)
-#
-# GELU(x) = 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715*x^3)))
-#
-# Strategy: vector loop calls scalar tanhf per element (tanhf is transcendental).
-# The multiplications and additions are vectorized; only the tanh call is scalar.
-# For each element: compute arg vectorially, then call tanhf, then combine.
-#
-# void gelu_inplace_vec(float* x, int n)
-# a0=x, a1=n
-# =============================================================================
+
 .section .text
 .global gelu_inplace_vec
 
@@ -32,7 +21,7 @@ gelu_inplace_vec:
 
 gelu_vec_loop:
     beqz    s1, gelu_vec_done
-    # Process one element at a time (tanhf is scalar transcendental)
+
     flw     fa0, 0(s0)
 
     # inner = x + 0.044715 * x^3
