@@ -1,17 +1,4 @@
-# =============================================================================
-# math.s  –  float math helpers for S4D galaxy classifier
-#
-# Routines:   expf, cosf, sinf, tanhf
-# Convention: argument in fa0, result in fa0
-#             Caller-saved: fa1–fa7, ft0–ft7, t0–t6
-# Accuracy:   >= 4 decimal places (matches TA requirement)
-#
-# Approximation strategy:
-#   expf : range-reduce then 6-term minimax polynomial
-#   cosf : 4-term Chebyshev-derived polynomial (accurate on +-10pi with reduction)
-#   sinf : 4-term polynomial after same reduction
-#   tanhf: (e^2x - 1)/(e^2x + 1), saturate for |x| >= 4
-# =============================================================================
+
 
 .section .text
 
