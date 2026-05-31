@@ -1,13 +1,4 @@
-# =============================================================================
-# hilbert_scan.s - Hilbert Scan layer
-#
-# Reorders image pixels using pre-computed Hilbert indices.
-# Pure integer loads/stores, no floating point except for the flw/fsw copies.
-#
-# void hilbert_scan(int32_t* indices, float* img, float* out)
-# a0=indices, a1=img, a2=out
-# MSE target: < 1e-12 (exact copy, no arithmetic)
-# =============================================================================
+
 .section .text
 .global hilbert_scan
 
