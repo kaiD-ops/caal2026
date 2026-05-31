@@ -1,14 +1,4 @@
-# =============================================================================
-# gelu.s - GELU activation function (in-place)
-#
-# GELU(x) = 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715*x^3)))
-# Calls tanhf from math.s.
-# Uses callee-saved fs1 to preserve x across the tanhf call.
-#
-# void gelu_inplace(float* x, int n)
-# a0=x (array pointer), a1=n (element count)
-# MSE target: < 1e-7
-# =============================================================================
+=
 .section .text
 .global gelu_inplace
 
