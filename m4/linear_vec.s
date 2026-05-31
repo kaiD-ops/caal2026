@@ -1,10 +1,4 @@
-# =============================================================================
-# linear_vec.s  –  RVV-vectorized Linear (FC) layer
-#
-# Computes Y = X * W^T + b for a sequence of input vectors.
-# Shape:  X [seq_len, in_dim]  →  Y [seq_len, out_dim]
-# W [out_dim, in_dim],  b [out_dim]
-# =============================================================================
+
 
 .section .text
 .global linear_layer
