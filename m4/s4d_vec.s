@@ -1,24 +1,3 @@
-# =============================================================================
-# s4d_layer.s - S4D (Structured State Space Diagonal) Layer
-#
-# Implements causal convolution using the S4D formulation:
-#   K[t] = 2*Re(sum_n C_tilde_n * A_bar_n^t)
-#   y[t][h] = D[h]*u[t][h] + sum_{j=0}^{t} K[j]*u[t-j][h]
-#
-# Optimization: kernel built via recurrence (NO repeated expf/cosf/sinf):
-#   cur[t+1] = cur[t] * step   (complex multiply)
-#   Reduces transcendental calls from O(L*N) to O(N) per channel.
-#   ~7.9 billion dynamic instructions for SEQ_LEN=4096, D_MODEL=64.
-#
-# Weight layout for C_mat: interleaved complex, shape [D_MODEL, N_STATES, 2]
-#   C_mat[h*32+n] = (re, im) as two consecutive float32 words.
-#
-# void s4d_layer(float* log_dt, float* log_A_real, float* A_imag,
-#                float* C_mat,  float* D_vec,       float* in, float* out)
-# a0=log_dt, a1=log_A_real, a2=A_imag, a3=C_mat, a4=D_vec, a5=in, a6=out
-#
-# MSE target: < 1e-7, MAE < 1e-4
-# =============================================================================
 
 .section .text
 .global s4d_layer
@@ -65,15 +44,7 @@ s4d_h_loop:
     call    expf
     fmv.s   fs0, fa0                # fs0 = dt
 
-    # -----------------------------------------------------------------------
-    # Phase 1: Precompute per-state (n=0..31):
-    #   Ar = -exp(log_A_real[h,n])
-    #   Ai = A_imag[h,n]
-    #   step_mag = exp(Ar*dt), step_cos = cos(Ai*dt), step_sin = sin(Ai*dt)
-    #   A_bar = step_mag*(step_cos + j*step_sin)
-    #   C_tilde = C*(A_bar-1)/A   (C from interleaved array)
-    #   cur_r[n]=1, cur_i[n]=0   (initial running state)
-    # -----------------------------------------------------------------------
+    
     li      s9, 0                   # n = 0
 
 s4d_pre_loop:
@@ -114,11 +85,7 @@ s4d_pre_loop:
     call    sinf
     fmv.s   fs7, fa0                # fs7 = step_sin = sin(dtAi)
 
-    # Normalize (cos,sin) to unit magnitude so |step| = step_mag EXACTLY.
-    # The poly cosf/sinf give cos^2+sin^2 = 1 + eps; over 4096 recurrence
-    # steps that eps compounds as (1+eps/2)^4096 and corrupts the kernel at
-    # large t (correct at t=0, wrong by t=4095). Forcing unit magnitude here
-    # makes the step a pure rotation * step_mag, so the kernel decays cleanly.
+   
     fmul.s  ft0, fs6, fs6
     fmul.s  ft1, fs7, fs7
     fadd.s  ft0, ft0, ft1           # cos^2 + sin^2
@@ -126,9 +93,6 @@ s4d_pre_loop:
     fdiv.s  fs6, fs6, ft0           # cos / norm
     fdiv.s  fs7, fs7, ft0           # sin / norm
 
-    # A_bar_r = step_mag * step_cos,  A_bar_i = step_mag * step_sin
-    # (cos,sin) now unit-magnitude so the recurrence step magnitude stays
-    # = step_mag < 1 (kernel decays, no blowup).
     fmul.s  fa1, fs5, fs6           # fa1 = A_bar_r
     fmul.s  fa2, fs5, fs7           # fa2 = A_bar_i
 
@@ -214,10 +178,6 @@ s4d_pre_loop:
 
 s4d_pre_done:
 
-    # -----------------------------------------------------------------------
-    # Phase 2: Build kernel K[t] = 2*Re(sum_n Ct_n * cur_n[t])
-    # cur_n[t+1] = cur_n[t] * step_n  (complex multiply, no transcendentals)
-    # -----------------------------------------------------------------------
     li      s9, 0                   # t = 0
 
 s4d_kern_t:
@@ -287,10 +247,6 @@ s4d_kern_n:
     fmul.s  ft7, fs6, ft3
     fadd.s  ft6, ft6, ft7
 
-    # Flush-to-zero: if |new_r|+|new_i| < 1e-20, force cur=0.
-    # smag<1 so cur decays monotonically; once tiny it stays tiny.
-    # Prevents denormal values (< 1.2e-38) that the VeeR FPU turns into NaN,
-    # which would then propagate K=NaN into the Phase-3 convolution.
     fabs.s  ft8, ft5
     fabs.s  ft9, ft6
     fadd.s  ft8, ft8, ft9
@@ -323,8 +279,6 @@ s4d_kern_n_done:
 
 s4d_kern_done:
 
-    # Guard: replace NaN/inf K values with 0.0 to prevent 0*NaN=NaN in Phase 3.
-    # Triggered when Ct overflows (Amag2 near-zero) and cur later underflows to 0.
     li      s9, 0
 s4d_kfix_loop:
     li      t0, 4096
@@ -351,16 +305,6 @@ s4d_kfix_next:
     j       s4d_kfix_loop
 s4d_kfix_done:
 
-    # -----------------------------------------------------------------------
-    # Phase 3: Causal convolution  (RVV, UNIT-stride)
-    # y[t][h] = D[h]*u[t][h] + sum_{j=0}^{t} K[j]*u[t-j][h]
-    #
-    # Build reversed channel column once:  urev[k] = u[(4095-k)][h].
-    # Then u[t-j] = urev[4095-t+j], so the causal dot becomes
-    #   acc = sum_{j=0}^{t} K[j] * urev[(4095-t)+j]
-    # Both operands now stride FORWARD by 1 -> plain vle32 (no slow vlse32
-    # strided gather, which whisper emulates lane-by-lane).
-    # -----------------------------------------------------------------------
     slli    t0, s7, 2
     add     t0, s4, t0
     flw     fs1, 0(t0)              # D[h]
@@ -464,15 +408,11 @@ s4d_h_done:
     lw      s11, 48(sp)
     addi    sp, sp, 64
     ret
-
-# =============================================================================
-# BSS: per-state scratch buffers (N_STATES=32, 4 bytes each = 128 bytes)
 .section .data
 .align 2
 s4d_finf_limit: .float 3.4e38   # largest finite float32
 s4d_ftz:        .float 1.0e-20  # flush-to-zero threshold (above denormal range)
 
-# =============================================================================
 .section .bss
 .align 2
 s4d_smag:   .space 128      # step_mag[32]
