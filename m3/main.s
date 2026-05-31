@@ -1,35 +1,5 @@
 
-#
-# Pipeline:
-#   1. hilbert_scan
-#   2. linear_layer  (UProject)
-#   3. s4d_layer     (layer 1)
-#   4. gelu_inplace
-#   5. s4d_layer     (layer 2)
-#   6. gelu_inplace
-#   7. take_last_timestep
-#   8. linear_layer  (FC head)
-#   9. softmax_inplace
-#
-# Weight layout in model_weights.bin (total 84496 bytes):
-#   hilbert_indices : 4096 * 4  = 16384 bytes  (int32)
-#   uproject_weight :   64 * 4  =   256 bytes  (float, shape [64,1])
-#   uproject_bias   :   64 * 4  =   256 bytes
-#   s4_1_log_dt     :   64 * 4  =   256 bytes
-#   s4_1_log_A_real : 64*32*4   =  8192 bytes
-#   s4_1_A_imag     : 64*32*4   =  8192 bytes
-#   s4_1_C          : 64*32*2*4 = 16384 bytes
-#   s4_1_D          :   64 * 4  =   256 bytes
-#   s4_2_log_dt     :   64 * 4  =   256 bytes
-#   s4_2_log_A_real : 64*32*4   =  8192 bytes
-#   s4_2_A_imag     : 64*32*4   =  8192 bytes
-#   s4_2_C          : 64*32*2*4 = 16384 bytes
-#   s4_2_D          :   64 * 4  =   256 bytes
-#   fc_weight       :  4*64*4   =  1024 bytes
-#   fc_bias         :   4  *4   =    16 bytes
-# =============================================================================
 
-#define STDOUT 0xd0580000
 
 .section .text
 .global _start
