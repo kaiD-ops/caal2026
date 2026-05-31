@@ -1,14 +1,4 @@
-# =============================================================================
-# linear_layer.s - Linear (fully-connected) layer
-#
-# Y = X * W^T + b
-# Handles both sequence (seq_len > 1) and single-vector (seq_len = 1) inputs.
-#
-# void linear_layer(float* W, float* b, float* in, float* out,
-#                   int in_dim, int out_dim, int seq_len)
-# a0=W, a1=b, a2=in, a3=out, a4=in_dim, a5=out_dim, a6=seq_len
-# MSE target: < 1e-8
-# =============================================================================
+
 .section .text
 .global linear_layer
 
