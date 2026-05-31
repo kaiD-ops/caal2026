@@ -1,17 +1,4 @@
-# =============================================================================
-# take_last_vec.s  –  RVV-vectorized TakeLastTimestep
-#
-# Extracts the final row (timestep 4095) from a [4096, 64] buffer.
-# The scalar version iterates 64 times with individual flw/fsw pairs.
-# The vector version copies all 64 floats in a single vle32 / vse32 pair
-# (64 * 4 = 256 bytes, fits in one vector operation for VLEN ≥ 256,
-# and in two strips for VLEN = 128).
-#
-# Signature (unchanged from M3):
-#   void take_last_timestep(float* in, float* out)
-#   a0 = in   [4096][64] float buffer
-#   a1 = out  [64]  float destination
-# =============================================================================
+
 
 .section .text
 .global take_last_timestep
@@ -34,8 +21,6 @@ tl_vec_loop:
     # Set vector configuration for e32 elements using an m4 group grouping allocation
     vsetvli t3, t0, e32, m4, ta, ma    # t3 = elements granted (vl)
 
-    # FIX: Use vector register v4 instead of v0 to avoid architectural conflicts 
-    # with the vector mask tracking registers across multi-register allocations.
     vle32.v  v4, (t1)              # Load vector data strip into v4-v7
     vse32.v  v4, (t2)              # Store vector data strip out of v4-v7
 
